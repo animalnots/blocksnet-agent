@@ -29,6 +29,12 @@ pip-wheel-metadata/
 outputs/
 *.log
 
+# Overpass / iduedu / network runtime cache (восстанавливается через
+# ``get_accessibility_graph(blocks, graph_type)`` при первом запуске;
+# OSM timestamp'ы делают diff бесполезным).
+cache/
+data/_cache/
+
 # Local example datasets and preprocessing sandboxes
 examples/
 
@@ -40,18 +46,52 @@ docs/mcp_repository_plan.md
 # Local dev workspace — планы, решения, deferred, спайки, дампы codesynapse.
 # Содержимое хранится на диске локально, в репозиторий не входит.
 docs/dev/
+scripts/dev/
+dev/
+
+# scripts/ — whitelist: в репо попадают только явно добавленные файлы.
+# Любой новый файл в scripts/ по умолчанию ignored, пока не будет явно
+# прописан в whitelist ниже. Это защищает от случайного коммита research-
+# или ad-hoc-скриптов.
+#
+# Чтобы добавить новый скрипт в репозиторий:
+#   1. Создайте файл scripts/<имя>.py
+#   2. Добавьте строку `!scripts/<имя>.py` в whitelist ниже
+#   3. Проверьте: git check-ignore -v scripts/<имя>.py
+scripts/*
+scripts/.*~
+
+# Whitelist: CLI, необходимые для MCP/A2A/data packaging workflow
+!scripts/README.md
+!scripts/generate_tool_catalog.py
+!scripts/validate_agent_card.py
+!scripts/package_data.py
+!scripts/fetch_data.py
+
+# Whitelist: smoke-проверки MCP/A2A (CI + локальный регресс)
+!scripts/smoke_client.py
+!scripts/smoke_mcp_tools.py
+!scripts/smoke_mcp_docker.py
+!scripts/smoke_a2a_agent.py
+!scripts/smoke_docker.sh
 
 # Large/local geodata; keep only small repository fixtures below
-data/
+data/**
+data/_releases/
 
 !data/
 !data/README.md
+!data/manifest.json
 !data/service_type.json
 !data/service_aliases.json
 !data/archetypes.csv
-
-# Local per-city data symlinks into examples/ (convenience, not for the repo)
-/data/saint_petersburg
+# Per-scenario README files (re-packaged into every archive)
+!data/saint-petersburg/
+!data/saint-petersburg/README.md
+!data/vasilievsky-island/
+!data/vasilievsky-island/README.md
+!data/yuzhno-sakhalinsk/
+!data/yuzhno-sakhalinsk/README.md
 
 # OS/editor noise
 .DS_Store

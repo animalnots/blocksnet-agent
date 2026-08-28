@@ -309,8 +309,8 @@ def make_network_tools(ctx: dict) -> list:
 
         Требует в ``data_dir``: ``blocks_with_services.gpkg``,
         ``blocks_to_nodes.pickle``, ``nodes_to_nodes.pickle``,
-        ``graph_drive.graphml`` (альтернативы ``*.pkl`` и ``drive.graphml``
-        поддержаны). Сценарий подготовки: ``scripts/prepare_road_congestion_inputs.py``.
+        ``graph_drive.graphml``. Альтернативы ``*.pkl`` и ``drive.graphml``
+        поддержаны. Входные файлы готовятся до вызова инструмента.
 
         Граф: int EPSG в ``graph['crs']``, ``x``/``y`` узлов, ``time_min`` и
         ``lanes`` рёбер. ``lanes`` нормализуется как в upstream:

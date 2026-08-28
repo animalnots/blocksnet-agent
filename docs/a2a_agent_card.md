@@ -1,11 +1,10 @@
 # Agent Card для BlocksNetAgent A2A-агента
 
 > Agent Card — это JSON-манифест, который A2A-агент отдаёт на пути
-> ``/.well-known/agent-card.json`` (по стандарту a2a-protocol). Используется
-> для discovery клиентами (LLM-агенты, MAS-оркестраторы).
+> ``/.well-known/agent-card.json``. Используется клиентами для discovery.
 
-Версия SDK: **a2a-sdk 1.1.1** (зафиксирована в ``docs/a2a_refactor/implementation/spike-a2a.md``).
-Версия сервиса: **0.2.0** (из ``pyproject.toml``).
+Версия SDK: **a2a-sdk 1.1.1**.
+Версия сервиса: **0.2.0**.
 
 ## 1. Получение карточки
 
@@ -13,16 +12,15 @@
 curl -s http://localhost:8080/.well-known/agent-card.json | jq
 ```
 
-Альтернативно — через `mcp.client.A2ACardResolver` в a2a-sdk (см. README SDK).
+Альтернативно — через `mcp.client.A2ACardResolver` в a2a-sdk.
 
-## 2. Реальный вывод (пример с локального запуска)
+## 2. Пример вывода с локального запуска
 
-> ⚠️ Это **реальный** пример из smoke-теста (``scripts/smoke_a2a_agent.py``),
-> не выдуманный. Поля и формат точно совпадают с protobuf-сериализацией a2a-sdk 1.1.1.
+> Пример проверяется smoke-тестом ``scripts/smoke_a2a_agent.py``.
 
 ```json
 {
-  "name": "blocksnet-agent-a2a",
+  "name": "blocksnet-mcp-a2a",
   "version": "0.2.0",
   "description": "A2A-агент для городской аналитики на базе BlocksNetAgent. Загружает данные кварталов, считает метрики, рассчитывает предложения по размещению сервисов.",
   "supportedInterfaces": [

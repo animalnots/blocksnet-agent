@@ -15,7 +15,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.agent
-    image: blocksnet-mcp/agent:latest
+    image: blocksnet-agent/agent:latest
     container_name: blocksnet-agent
     restart: unless-stopped
     ports:
@@ -47,7 +47,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.mcp
-    image: blocksnet-mcp/mcp:latest
+    image: blocksnet-agent/mcp:latest
     container_name: blocksnet-mcp
     restart: unless-stopped
     # stdio-транспорт — без ports.

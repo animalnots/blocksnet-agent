@@ -65,7 +65,7 @@ all = [
 # MCP raw tools (stdio). Без LLM.
 blocksnet-mcp = "blocksnet_mcp.server:run"
 # A2A-сервис (FastAPI/HTTP). С LLM.
-blocksnet-agent = "blocksnet_agent.service:run"
+blocksnet-agent = "blocksnet_agent.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/SevenSolarStudio/blocksnet-mcp"

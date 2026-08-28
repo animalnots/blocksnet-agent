@@ -1,0 +1,526 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-27T13:26:59+00:00",
+  "generator": "scripts/package_data.py",
+  "scenarios": {
+    "saint-petersburg": {
+      "scenario_id": "saint-petersburg",
+      "description": "Санкт-Петербург: ~494 МБ. Полный набор для provision + scenario. acc_mx.pickle и blocks_with_services.gpkg готовы.",
+      "archive": "saint-petersburg-data.zip",
+      "size_bytes": 346876847,
+      "size_uncompressed_bytes": 517232139,
+      "sha256": "d985188f49b45413f905af56c2545eff612f9f1949e30b05980488598e2a1f7f",
+      "file_count": 68,
+      "files": [
+        {
+          "path": "saint-petersburg/README.md",
+          "size_bytes": 3022
+        },
+        {
+          "path": "saint-petersburg/data/acc_mx.pickle",
+          "size_bytes": 351038242
+        },
+        {
+          "path": "saint-petersburg/data/blocks.geojson",
+          "size_bytes": 13548605
+        },
+        {
+          "path": "saint-petersburg/data/blocks_with_services.gpkg",
+          "size_bytes": 10674176
+        },
+        {
+          "path": "saint-petersburg/data/buildings.geojson",
+          "size_bytes": 80654164
+        },
+        {
+          "path": "saint-petersburg/data/functional_zones.geojson",
+          "size_bytes": 34310564
+        },
+        {
+          "path": "saint-petersburg/data/land_use_rules.json",
+          "size_bytes": 1083
+        },
+        {
+          "path": "saint-petersburg/data/service_type.json",
+          "size_bytes": 68719
+        },
+        {
+          "path": "saint-petersburg/data/services/animal_shelter.geojson",
+          "size_bytes": 4399
+        },
+        {
+          "path": "saint-petersburg/data/services/bakery.geojson",
+          "size_bytes": 900162
+        },
+        {
+          "path": "saint-petersburg/data/services/bank.geojson",
+          "size_bytes": 148866
+        },
+        {
+          "path": "saint-petersburg/data/services/bar.geojson",
+          "size_bytes": 730004
+        },
+        {
+          "path": "saint-petersburg/data/services/beach.geojson",
+          "size_bytes": 1581426
+        },
+        {
+          "path": "saint-petersburg/data/services/brewery.geojson",
+          "size_bytes": 10683
+        },
+        {
+          "path": "saint-petersburg/data/services/bus_station.geojson",
+          "size_bytes": 4225
+        },
+        {
+          "path": "saint-petersburg/data/services/bus_stop.geojson",
+          "size_bytes": 8187524
+        },
+        {
+          "path": "saint-petersburg/data/services/cafe.geojson",
+          "size_bytes": 448582
+        },
+        {
+          "path": "saint-petersburg/data/services/cemetery.geojson",
+          "size_bytes": 12208
+        },
+        {
+          "path": "saint-petersburg/data/services/cinema.geojson",
+          "size_bytes": 10738
+        },
+        {
+          "path": "saint-petersburg/data/services/circus.geojson",
+          "size_bytes": 2467
+        },
+        {
+          "path": "saint-petersburg/data/services/convenience.geojson",
+          "size_bytes": 424177
+        },
+        {
+          "path": "saint-petersburg/data/services/dog_park.geojson",
+          "size_bytes": 5911
+        },
+        {
+          "path": "saint-petersburg/data/services/fuel.geojson",
+          "size_bytes": 69733
+        },
+        {
+          "path": "saint-petersburg/data/services/government.geojson",
+          "size_bytes": 286731
+        },
+        {
+          "path": "saint-petersburg/data/services/greenhouse_complex.geojson",
+          "size_bytes": 26865
+        },
+        {
+          "path": "saint-petersburg/data/services/guest_house.geojson",
+          "size_bytes": 102385
+        },
+        {
+          "path": "saint-petersburg/data/services/hairdresser.geojson",
+          "size_bytes": 542733
+        },
+        {
+          "path": "saint-petersburg/data/services/hospital.geojson",
+          "size_bytes": 19428
+        },
+        {
+          "path": "saint-petersburg/data/services/hostel.geojson",
+          "size_bytes": 138820
+        },
+        {
+          "path": "saint-petersburg/data/services/hotel.geojson",
+          "size_bytes": 519693
+        },
+        {
+          "path": "saint-petersburg/data/services/kindergarten.geojson",
+          "size_bytes": 958429
+        },
+        {
+          "path": "saint-petersburg/data/services/landfill.geojson",
+          "size_bytes": 36498
+        },
+        {
+          "path": "saint-petersburg/data/services/lawyer.geojson",
+          "size_bytes": 122241
+        },
+        {
+          "path": "saint-petersburg/data/services/machine_building_plant.geojson",
+          "size_bytes": 114414
+        },
+        {
+          "path": "saint-petersburg/data/services/mall.geojson",
+          "size_bytes": 41273
+        },
+        {
+          "path": "saint-petersburg/data/services/market.geojson",
+          "size_bytes": 9414
+        },
+        {
+          "path": "saint-petersburg/data/services/multifunctional_center.geojson",
+          "size_bytes": 46882
+        },
+        {
+          "path": "saint-petersburg/data/services/museum.geojson",
+          "size_bytes": 40105
+        },
+        {
+          "path": "saint-petersburg/data/services/park.geojson",
+          "size_bytes": 6696838
+        },
+        {
+          "path": "saint-petersburg/data/services/parking.geojson",
+          "size_bytes": 285754
+        },
+        {
+          "path": "saint-petersburg/data/services/pharmacy.geojson",
+          "size_bytes": 298065
+        },
+        {
+          "path": "saint-petersburg/data/services/pier.geojson",
+          "size_bytes": 335686
+        },
+        {
+          "path": "saint-petersburg/data/services/pitch.geojson",
+          "size_bytes": 376568
+        },
+        {
+          "path": "saint-petersburg/data/services/plant_nursery.geojson",
+          "size_bytes": 9875
+        },
+        {
+          "path": "saint-petersburg/data/services/playground.geojson",
+          "size_bytes": 790591
+        },
+        {
+          "path": "saint-petersburg/data/services/police.geojson",
+          "size_bytes": 51186
+        },
+        {
+          "path": "saint-petersburg/data/services/polyclinic.geojson",
+          "size_bytes": 38079
+        },
+        {
+          "path": "saint-petersburg/data/services/post.geojson",
+          "size_bytes": 48723
+        },
+        {
+          "path": "saint-petersburg/data/services/prison.geojson",
+          "size_bytes": 8017
+        },
+        {
+          "path": "saint-petersburg/data/services/recruitment.geojson",
+          "size_bytes": 29513
+        },
+        {
+          "path": "saint-petersburg/data/services/religion.geojson",
+          "size_bytes": 40109
+        },
+        {
+          "path": "saint-petersburg/data/services/reserve.geojson",
+          "size_bytes": 12085
+        },
+        {
+          "path": "saint-petersburg/data/services/restaurant.geojson",
+          "size_bytes": 198572
+        },
+        {
+          "path": "saint-petersburg/data/services/sanatorium.geojson",
+          "size_bytes": 85174
+        },
+        {
+          "path": "saint-petersburg/data/services/school.geojson",
+          "size_bytes": 592275
+        },
+        {
+          "path": "saint-petersburg/data/services/substation.geojson",
+          "size_bytes": 575869
+        },
+        {
+          "path": "saint-petersburg/data/services/subway_entrance.geojson",
+          "size_bytes": 91359
+        },
+        {
+          "path": "saint-petersburg/data/services/supermarket.geojson",
+          "size_bytes": 231559
+        },
+        {
+          "path": "saint-petersburg/data/services/swimming_pool.geojson",
+          "size_bytes": 12488
+        },
+        {
+          "path": "saint-petersburg/data/services/theatre.geojson",
+          "size_bytes": 16922
+        },
+        {
+          "path": "saint-petersburg/data/services/train_building.geojson",
+          "size_bytes": 3032
+        },
+        {
+          "path": "saint-petersburg/data/services/train_station.geojson",
+          "size_bytes": 37851
+        },
+        {
+          "path": "saint-petersburg/data/services/university.geojson",
+          "size_bytes": 34050
+        },
+        {
+          "path": "saint-petersburg/data/services/warehouse.geojson",
+          "size_bytes": 386705
+        },
+        {
+          "path": "saint-petersburg/data/services/wastewater_plant.geojson",
+          "size_bytes": 28864
+        },
+        {
+          "path": "saint-petersburg/data/services/water_works.geojson",
+          "size_bytes": 6167
+        },
+        {
+          "path": "saint-petersburg/data/services/woodworking_plant.geojson",
+          "size_bytes": 41708
+        },
+        {
+          "path": "saint-petersburg/data/services/zoo.geojson",
+          "size_bytes": 22864
+        }
+      ],
+      "notes": [
+        "compute_road_congestion НЕ готов (нет graph_drive/b2n/n2n).",
+        "Для road_congestion: scripts/prepare_road_congestion_inputs.py."
+      ]
+    },
+    "yuzhno-sakhalinsk": {
+      "scenario_id": "yuzhno-sakhalinsk",
+      "description": "Южно-Сахалинск: ~27 МБ. Полный provision-набор: blocks_with_services.gpkg (903 блока, 60+ сервисов) + acc_mx.pickle готовы. road_congestion inputs отсутствуют.",
+      "archive": "yuzhno-sakhalinsk-data.zip",
+      "size_bytes": 7399043,
+      "size_uncompressed_bytes": 27952524,
+      "sha256": "2799715a8e2c383d0f4e11c7b90e90bdec0074867aefc55857e5ce465cd31594",
+      "file_count": 54,
+      "files": [
+        {
+          "path": "yuzhno-sakhalinsk/README.md",
+          "size_bytes": 3816
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/acc_mx.pickle",
+          "size_bytes": 1631390
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/archetypes.csv",
+          "size_bytes": 11434
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/blocks_with_services.gpkg",
+          "size_bytes": 1605632
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/boundaries.gpkg",
+          "size_bytes": 110592
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/buildings.gpkg",
+          "size_bytes": 7557120
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/functional_zones.geojson",
+          "size_bytes": 3052915
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/railways.geojson",
+          "size_bytes": 175645
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/roads.geojson",
+          "size_bytes": 11829152
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/service_type.json",
+          "size_bytes": 73345
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/bakery.geojson",
+          "size_bytes": 3258
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/bank.geojson",
+          "size_bytes": 6616
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/bar.geojson",
+          "size_bytes": 1274
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/beauty.geojson",
+          "size_bytes": 2584
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/bus_stop.geojson",
+          "size_bytes": 134717
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/cafe.geojson",
+          "size_bytes": 16059
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/cinema.geojson",
+          "size_bytes": 785
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/clothes.geojson",
+          "size_bytes": 12365
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/college.geojson",
+          "size_bytes": 3026
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/convenience.geojson",
+          "size_bytes": 60674
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/dentist.geojson",
+          "size_bytes": 2078
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/electronic.geojson",
+          "size_bytes": 4339
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/emergency.geojson",
+          "size_bytes": 416
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/extra_education.geojson",
+          "size_bytes": 18891
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/fire_station.geojson",
+          "size_bytes": 2383
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/hairdresser.geojson",
+          "size_bytes": 3872
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/historic.geojson",
+          "size_bytes": 16676
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/hospital.geojson",
+          "size_bytes": 2419
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/hostel.geojson",
+          "size_bytes": 4440
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/hotel.geojson",
+          "size_bytes": 13582
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/kindergarten.geojson",
+          "size_bytes": 12081
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/lawyer.geojson",
+          "size_bytes": 15576
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/library.geojson",
+          "size_bytes": 3522
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/mall.geojson",
+          "size_bytes": 2870
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/mfz.geojson",
+          "size_bytes": 1179
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/museum.geojson",
+          "size_bytes": 2567
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/park.geojson",
+          "size_bytes": 37840
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/pharmacy.geojson",
+          "size_bytes": 20847
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/pitch.geojson",
+          "size_bytes": 35085
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/playground.geojson",
+          "size_bytes": 54058
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/police.geojson",
+          "size_bytes": 6075
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/post_office.geojson",
+          "size_bytes": 4904
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/recruitment.geojson",
+          "size_bytes": 403
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/register_office.geojson",
+          "size_bytes": 532
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/religion.geojson",
+          "size_bytes": 2884
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/restaurant.geojson",
+          "size_bytes": 7919
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/school.geojson",
+          "size_bytes": 7155
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/shop_sport.geojson",
+          "size_bytes": 1750
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/stadium.geojson",
+          "size_bytes": 978
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/swimming_pool.geojson",
+          "size_bytes": 1601
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/train_building.geojson",
+          "size_bytes": 1102
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/train_station.geojson",
+          "size_bytes": 3495
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/services/university.geojson",
+          "size_bytes": 2731
+        },
+        {
+          "path": "yuzhno-sakhalinsk/data/water.geojson",
+          "size_bytes": 1363875
+        }
+      ],
+      "notes": [
+        "compute_road_congestion НЕ готов (нет graph_drive/b2n/n2n).",
+        "blocks_with_services.gpkg = переименованный blocks.gpkg (содержит всё для provision).",
+        "Для road_congestion: scripts/prepare_road_congestion_inputs.py (адаптировать путь)."
+      ]
+    }
+  }
+}

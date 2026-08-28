@@ -3,16 +3,13 @@
 > **Актуальная архитектура проекта.** Документ описывает целевое состояние:
 > два транспорта (MCP-stdio + A2A-HTTP) на одном ядре агента.
 
-> Планы реализации, история решений и завершённые этапы — в `docs/dev/`. Этот
-> документ описывает только текущее состояние.
-
 ---
 
 ## 1. Главная идея
 
 Два решения на одном ядре:
 
-- **MCP-server** (`python -m blocksnet_mcp`) — stdio, **33 raw-инструмента + 3 session-tools**.
+- **MCP-server** (`python -m blocksnet_mcp`) — stdio, **36 raw-инструмента + 3 session-tools**.
   Не требует LLM. Подходит для интеграции в LLM-агенты (Claude/Cursor), скрипты,
   дашборды.
 - **A2A-агент** (`python -m blocksnet_agent`) — HTTP (FastAPI), **2 skill-а**:
@@ -30,7 +27,7 @@ payload, конфиг. Никакой дубликации — один исто
                         │                                                │
                         │  ┌──────────────┐    ┌──────────────────────┐ │
                         │  │ runtime.py   │    │ tools/ + catalog.py  │ │
-                        │  │ (per-run,    │    │ 33 raw tools + RAG   │ │
+                        │  │ (per-run,    │    │ 36 raw tools + RAG   │ │
                         │  │  start_run)  │    │                      │ │
                         │  └──────────────┘    └──────────────────────┘ │
                         │  ┌──────────────┐    ┌──────────────────────┐ │
@@ -53,10 +50,10 @@ payload, конфиг. Никакой дубликации — один исто
    │ server.py   ───std─►  │                          │ server.py   ──HTTP──►   │
    │   FastMCP             │                          │   FastAPI               │
    │ envelope.py           │                          │                         │
-   │ session.py            │                          │ 33 raw-tools не         │
+   │ session.py            │                          │ 36 raw-tools не         │
    │  (LRU+TTL+isolation)  │                          │ экспонируются —         │
    │                       │                          │ только 2 skill-а:       │
-   │ 33 raw-tools          │                          │ run_pipeline +          │
+   │ 36 raw-tools          │                          │ run_pipeline +          │
    │ + 3 session-tools     │                          │ analyze_urban_question  │
    └───────────────────────┘                          └─────────────────────────┘
               │                                                     │
@@ -88,7 +85,7 @@ JSON-RPC SendMessage (Bearer)
   │
   ▼
 DefaultRequestHandler → AgentExecutor.execute()
-  │  message.metadata.scenario_id → ScenarioContext
+  │  DataPart scenario_id → ScenarioContext
   ▼
 TaskManager.submit() → Semaphore(MAX_CONCURRENT)
   │

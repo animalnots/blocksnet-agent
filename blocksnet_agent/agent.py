@@ -230,9 +230,9 @@ class BlocksNetAgent:
         if self_confidence and self_confidence != f"{confidence:.2f}":
             sections["SELF_CONFIDENCE"] = self_confidence
         run_dir = str(ctx.run_dir)
-        # P-S5.2: финальный структурный синтез — перенесённый паттерн из fp2mp-core
-        # (см. ``blocksnet_agent/synthesis.py``). Всегда вызывается после refine+
-        # classify+reentry, отбирает ``supported/refuted`` гипотезы и сохраняет
+        # Финальный структурный синтез (см. ``blocksnet_agent/synthesis.py``).
+        # Всегда вызывается после refine+classify+reentry, отбирает
+        # ``supported/refuted`` гипотезы и сохраняет
         # ``run_dir/synthesis.md``. Раньше этой роли не было — клиент получал
         # сырой дамп 9-секционного блока (см. outputs/run_20260703-142342).
         try:

@@ -137,7 +137,7 @@ outputs/
 
 Для MAS-сценариев с `scenario_id` подкаталог `data/<scenario_id>/` материализуется
 через `blocksnet_agent.context.materializer`. Сейчас — in-process factory;
-для production-MAS потребуется HTTP-клиент к UrbanDB (зафиксировано в `docs/dev/`).
+для production-MAS потребуется HTTP-клиент к UrbanDB.
 
 ## 5. Переменные окружения — единая таблица
 
@@ -160,22 +160,13 @@ outputs/
 | `A2A_MAX_CONCURRENT_TASKS` | ✅ | ❌ | нет | `2` | Лимит параллельных A2A-задач |
 | `A2A_TASK_TTL_SEC` | ✅ | ❌ | нет | `3600` | TTL завершённых A2A-задач |
 | `A2A_PROGRESS_INTERVAL_SEC` | ✅ | ❌ | нет | `10.0` | Интервал TaskStatusUpdateEvent |
-| `AUTH_ENABLED` | ✅ | ✅ | нет | `false` | Включить Bearer auth |
-| `MAS_BEARER_TOKEN` / `A2A_MAS_BEARER_TOKEN` | ✅ | ✅ | при `AUTH_ENABLED=true` | — | Статический токен |
+| `A2A_AUTH_ENABLED` | ✅ | ❌ | нет | `false` | Включить Bearer auth для A2A |
+| `A2A_MAS_BEARER_TOKEN` | ✅ | ❌ | при `A2A_AUTH_ENABLED=true` | — | Статический токен A2A |
 | `URBANDB_URL` / `URBANDB_TOKEN` | ✅ | ✅ | при `scenario_id` | — | Материализация сценариев |
 
 ¹ Только для deprecated `analyze_urban_question` (legacy LLM-агент). Raw-tools работают без LLM.
 
-## 6. Размеры образов (фактические)
-
-Заполняется после `docker build` в реальном окружении:
-
-| Образ | Размер | LLM-зависимости |
-|---|---|---|
-| `blocksnet-agent/mcp` | (TBD) | нет |
-| `blocksnet-agent/a2a-agent` | (TBD) | да |
-
-## 7. Проверка работоспособности
+## 6. Проверка работоспособности
 
 ### Локально
 
@@ -188,7 +179,7 @@ python scripts/smoke_mcp_tools.py   # SMOKE OK
 python scripts/smoke_a2a_agent.py   # SMOKE OK
 
 # pytest
-pytest  # 257 passed, 0 regressions
+pytest
 ```
 
 ### Docker
@@ -197,18 +188,18 @@ pytest  # 257 passed, 0 regressions
 bash scripts/smoke_docker.sh  # требует docker + curl
 ```
 
-## 8. Устранение неполадок
+## 7. Устранение неполадок
 
 | Симптом | Причина | Решение |
 |---|---|---|
-| `RuntimeError: AUTH_ENABLED=true but MAS_BEARER_TOKEN is not set` | Не задан токен при включённом auth | Задать `A2A_MAS_BEARER_TOKEN` / `MAS_BEARER_TOKEN` |
+| `RuntimeError: AUTH_ENABLED=true but MAS_BEARER_TOKEN is not set` | Не задан A2A-токен при включённом auth | Задать `A2A_MAS_BEARER_TOKEN` |
 | `SessionScenarioMismatch` | Смена `scenario_id` в существующей сессии | Открыть новую сессию (`open_session` с другим id) |
 | `SCENARIO_NOT_MATERIALIZED` | `scenario_id` задан, но `data_dir/<scenario_id>/` не существует | Создать каталог или использовать `materializer` |
 | `DeadlineExceeded` | Прогон не успел за `DEADLINE_SEC` | Увеличить deadline или уменьшить `MAX_ITERATIONS` |
 | MCP-server не стартует | Не установлены системные пакеты | Проверить `libgdal`, `libgeos`, `libproj` |
 | A2A возвращает 401 | Токен невалиден или отсутствует | Проверить `Authorization: Bearer <token>` |
 
-## 9. См. также
+## 8. См. также
 
 | Документ | Назначение |
 |---|---|

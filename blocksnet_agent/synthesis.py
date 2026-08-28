@@ -1,13 +1,11 @@
 """
 Финальный структурный синтез ответа BlocksNetAgent.
 
-Перенесён из паттерна fp2mp-core (см. ``fp2mp_core/nodes/synthesis.py``).
 Раньше финальный блок либо писался сырым текстом по 9 секциям из
 ``SYSTEM_PROMPT`` (разбираемый regex), либо собирался ad-hoc в ``_finalize``
 только при выходе по iteration-limit. Это давало Final Answer в стиле
-«дамп графа»: ``ANALYSIS PLAN: ... HYPOTHESES: - id: H1; claim: ...; status:
-inconclusive`` (см. outputs/run_20260722-*/run_log.md, августовский
-outputs/run_20260723-13*/run_log.md отсутствует вообще).
+«дамп графа» с ``ANALYSIS PLAN: ... HYPOTHESES: - id: H1; claim: ...; status:
+inconclusive``.
 
 Здесь ``synthesize(...)`` всегда вызывается после замены Refine+Hypothesis-
 reentry, отбирает «прошедшие» факты (tool_observations без failure-маркеров +
@@ -15,7 +13,7 @@ reentry, отбирает «прошедшие» факты (tool_observations �
 через отдельный LLM-вызов. Результат — русский markdown, сохраняемый в
 ``run_dir/synthesis.md`` и прикладываемый к ``payload["synthesis"]``.
 
-Структура ответа взята из ``fp2mp_core/nodes/synthesis.py:54-74``:
+Структура ответа:
 1. Ответ (committed conclusion)
 2. Как читаю вопрос
 3. На чём держится
@@ -49,8 +47,7 @@ _FAILURE_MARKERS = (
     "REPEATED_FAILED_CALL",
 )
 
-# Пороги для promotion в финальный синтез — по образцу fp2mp-core
-# (``_PROMOTE_THRESHOLD = 0.65``). Здесь пороги отражают уже подсчитанный
+# Пороги для promotion в финальный синтез отражают уже подсчитанный
 # confidence на нижних слоях: гипотезы ``supported``/``refuted`` прошли
 # numerical test, ``inconclusive`` — нет.
 _VERIFIED_HYPOTHESIS_STATUSES = frozenset({"supported", "refuted"})

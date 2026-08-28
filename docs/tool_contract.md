@@ -1,6 +1,6 @@
 # Контракт инструментов
 
-- **MCP-server экспонирует 33 raw-инструмента** (``compute_*``, ``load_*``, ``list_*``,
+- **MCP-server экспонирует 36 raw-инструментов** (``compute_*``, ``load_*``, ``list_*``,
   ``get_*``, ``render_metric_map``, ``suggest_target_blocks``, ``propose_zone_development``,
   ``build_adjacency_graph``, ``find_tools``, ``get_tool_help``) +
   **3 служебных** (``open_session``/``close_session``/``session_info``). Полный каталог —
@@ -21,13 +21,13 @@
 | Поле | Тип | Описание |
 |---|---|---|
 | `question` | `str` (required) | Городской вопрос на естественном языке |
-| `max_iterations` | `int \| None` | Переопределить лимит итераций (None → из `A2A_MAX_CONCURRENT_TASKS` дефолт) |
+| `max_iterations` | `int \| None` | Переопределить лимит итераций; без значения используется `MAX_ITERATIONS` |
 | `scenario_id` | `str \| None` | Id сценария MAS (whitelist `[a-zA-Z0-9_-]{1,64}`) |
 | `project_id` | `str \| None` | Id проекта MAS |
 
-**Передача:** через JSON-RPC ``message.metadata.scenario_id`` (стандартное поле a2a-sdk 1.1.1)
-или прямо в ``RunPipelineInput``. Если задан — ``data_dir`` переписывается на
-``DATA_DIR/<scenario_id>``.
+**Передача:** CodeSynapse передаёт структурированные параметры через DataPart.
+`message.metadata` поддерживается только как fallback для локальных клиентов.
+Если задан `scenario_id`, используется `DATA_DIR/<scenario_id>`.
 
 **Выход:** тот же dict, что отдаёт ``analyze_urban_question`` v1 (см. раздел 4).
 
@@ -83,8 +83,6 @@ A2A-skill ``run_pipeline`` предоставляет тот же формат +
 | `SESSION_SCENARIO_MISMATCH` | Смена ``scenario_id`` в существующей сессии |
 | `SCENARIO_NOT_MATERIALIZED` | ``scenario_id`` задан, но каталога нет и materializer не помог |
 
-**Envelope НЕ различает «нет токена» и «неверный токен»** (anti-enumeration).
-
 ### 8.1. `compute_road_congestion` (экспериментальный)
 
 Строит OD-матрицу (origin-constrained gravity, integerized) и выполняет
@@ -115,15 +113,15 @@ A2A-skill ``run_pipeline`` предоставляет тот же формат +
   дефолт 200). Полная матрица остаётся в `state['origin_destination_matrix']`.
 
 **Данные:** требует `blocks_to_nodes.pickle`, `nodes_to_nodes.pickle`,
-`graph_drive.graphml` (альтернативы `*.pkl` и `drive.graphml` поддержаны) —
-готовятся скриптом `scripts/prepare_road_congestion_inputs.py`.
+`graph_drive.graphml`. Альтернативы `*.pkl` и `drive.graphml` поддержаны.
+Входные файлы готовятся вне этого репозитория.
 
 **Известные upstream-дефекты** (см.
 `research/road_congestion_skill_basis.md`):
 `# FIXME multidigraph edges split congestion`. Перенесены вместе с кодом;
 правки — за рамками этого плана.
 
-Полный план доведения до production: `docs/dev/plans/road_congestion.md`.
+Полный план доведения до production — в `research/road_congestion_skill_basis.md`.
 
 ## 9. Сессии MCP
 
@@ -140,8 +138,10 @@ A2A-skill ``run_pipeline`` предоставляет тот же формат +
 
 ## 10. Auth и scenario_id
 
-**Bearer-токен:** статический (``MAS_BEARER_TOKEN``). ``hmac.compare_digest`` —
-константное время. ``AUTH_ENABLED=false`` (default) — auth отключён.
+Bearer auth применяется к A2A-сервису. Для включения задаются
+``A2A_AUTH_ENABLED=true`` и ``A2A_MAS_BEARER_TOKEN``. Проверка токена использует
+``hmac.compare_digest``. MCP работает через локальный stdio-транспорт и не
+выполняет HTTP-аутентификацию.
 
 **Коды ошибок auth:**
 
@@ -150,14 +150,14 @@ A2A-skill ``run_pipeline`` предоставляет тот же формат +
 | `invalid_token` | 401 | Нет токена или токен неверный (текст единый) |
 | `insufficient_scope` | 403 | Токен валиден, но scope не разрешает (задел на JWT) |
 
-**``scenario_id``** приходит из auth-claims (``Principal.scopes``) или из tool-call
-аргументов. Whitelist-регулярка ``[a-zA-Z0-9_-]{1,64}``. Path-traversal
-(``../../etc``) → ``VALIDATION_ERROR``.
+``scenario_id`` приходит из DataPart A2A-запроса или аргументов MCP tool-call.
+Whitelist-регулярка ``[a-zA-Z0-9_-]{1,64}``. Попытка path traversal возвращает
+``VALIDATION_ERROR``.
 
 ## 12. Выходной payload `analyze_urban_question` / `run_pipeline`
 
-> **Актуально с шага P-S5.x** (синтез-узел из fp2mp-core, см.
-> `blocksnet_agent/synthesis.py`). Контракт — общий для обоих skill-ов и для
+> **Финальный синтез** — структурный 7-секционный decision memo, см.
+> `blocksnet_agent/synthesis.py`. Контракт — общий для обоих skill-ов и для
 > legacy-MCP-tool `analyze_urban_question`. Формат фиксирован в
 > `blocksnet_mcp/serialize.py::to_json` и покрыт тестами
 > `tests/test_serialize.py` + `tests/test_synthesis.py`.
@@ -253,7 +253,7 @@ maps/                # PNG/CSV из compute_*
 | `analyze_urban_question` (MCP-tool, v1) | `analyze_urban_question` (MCP-tool, v2) | **DEPRECATED** — legacy LLM-tool, убрать в v2.1 |
 | `analyze_urban_question` (MCP-tool) | `analyze_urban_question` (A2A skill) | **DEPRECATED** — прокси на ``run_pipeline``, убрать в v2.1 |
 | (нет) | `run_pipeline` (A2A skill) | **NEW** — основной A2A skill |
-| (нет) | 33 raw-инструмента + 3 session-tools (MCP) | **NEW** — включает экспериментальный `compute_road_congestion` (см. R-план `docs/dev/plans/road_congestion.md`) |
+| (нет) | 36 raw-инструмента + 3 session-tools (MCP) | **NEW** — включает `compute_road_congestion` и 3 preparation-tools (`build_blocks_with_services`, `prepare_accessibility_matrix`, `prepare_road_congestion_inputs`) |
 | (нет) | сессии с ``session_id`` + изоляция | **NEW** |
 | (нет) | ``scenario_id`` / ``project_id`` | **NEW** |
 | (нет) | Bearer auth | **NEW** (опционально) |

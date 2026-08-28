@@ -7,16 +7,11 @@
 монтирует — если инструмент требует датасет для простого перечисления, здесь
 это и вскроется.
 
-Эталон, которому следуем: ``docs/dev/codesynapse/docs/mcp-server-templates/
-docker/stdio/`` (их ``scripts/smoke.py`` делает то же самое для hello-world).
-
-    python scripts/smoke_mcp_docker.py                     # blocksnet-mcp:local
+    python scripts/smoke_mcp_docker.py                     # blocksnet-agent/mcp:local
     python scripts/smoke_mcp_docker.py --image registry/blocksnet-mcp:0.2.0
 
 Exit code: 0 — образ пригоден к регистрации; 1 — контракт нарушен;
 2 — образ или docker недоступны.
-
-План: ``docs/dev/plans/codesynapse/02-mcp-channel.md`` (M2).
 """
 
 from __future__ import annotations
@@ -28,7 +23,7 @@ import shutil
 import subprocess
 import sys
 
-DEFAULT_IMAGE = "blocksnet-mcp:local"
+DEFAULT_IMAGE = "blocksnet-agent/mcp:local"
 
 # Правила их mcp_tool_ids.py: имя инструмента и mcp_server — только эти символы,
 # точки запрещены (public id склеивается как ``server.tool``).

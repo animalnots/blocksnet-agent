@@ -2,10 +2,10 @@
 
 `blocksnet-agent` включает два решения для городской аналитики поверх `BlocksNetAgent`:
 
-- **MCP-server** (`python -m blocksnet_mcp`) — stdio, 33 raw-tools + 3 session-tools.
+- **MCP-server** (`python -m blocksnet_mcp`) — stdio, 36 raw-tools + 3 session-tools.
 Не требует LLM.
-- **A2A-агент** (`python -m blocksnet_agent`) — HTTP, 2 skill-а (`run_pipeline`,  
-`analyze_urban_question`). Требует LLM (CHAT_URL/API_KEY).
+- **A2A-агент** (`python -m blocksnet_agent`) — HTTP, 2 skill-а: `run_pipeline`
+и `analyze_urban_question`. Требует LLM через `CHAT_URL` и `API_KEY`.
 
 MCP-server — для интеграции в LLM-агенты через Model Context Protocol.
 A2A-агент — для интеграции в MAS-цепочки (Agent-to-Agent) и standalone
@@ -78,7 +78,7 @@ docker compose up -d
 ## Каталог инструментов и контракт
 
 - **MCP**: [docs/mcp_tool_catalog.md](docs/mcp_tool_catalog.md) — auto-generated из
-живого кода через `build_catalog()`. 33 raw-инструмента + 3 session-tools.
+живого кода через `build_catalog()`. 36 raw-инструмента + 3 session-tools.
 - **A2A**: [docs/a2a_agent_card.md](docs/a2a_agent_card.md) — карточка сервиса
 (реальный вывод), описание skill-ов.
 - **Контракт**: [docs/tool_contract.md](docs/tool_contract.md) — формат
@@ -115,7 +115,7 @@ blocksnet-agent/
 │   ├── synthesis.py         # P-S5.x: финальный структурный синтез (7-секционный decision memo)
 │   ├── tools/               # raw tools + catalog
 │   └── ...
-├── tests/                   # 266 passed (25 файлов, +test_synthesis.py)
+├── tests/                   # unit-, contract- и integration-тесты
 ├── scripts/                 # smoke_mcp_tools, smoke_a2a_agent, generate_tool_catalog, smoke_docker
 └── docs/                    # tool_contract.md, mcp_tool_catalog.md (auto-gen), A2A Agent Card, ...
 ```
@@ -201,9 +201,8 @@ ReAct (AgentExecutor)
 | [docs/README.md](docs/README.md)                       | Человекочитаемый индекс документации                |
 | [blocksnet_mcp/README.md](blocksnet_mcp/README.md)     | Индекс MCP-слоя                                     |
 | [blocksnet_agent/README.md](blocksnet_agent/README.md) | Индекс переносимого ядра агента                     |
-| [examples/README.md](examples/README.md)               | Индекс интерактивных блокнотов и локальных примеров |
 | [tests/README.md](tests/README.md)                     | Индекс контрактных тестов                           |
-| [scripts/README.md](scripts/README.md)                 | Индекс локальных smoke-проверок MCP                 |
+| [scripts/README.md](scripts/README.md)                 | Индекс CLI-скриптов для проверки и подготовки данных |
 
 
 
@@ -215,7 +214,7 @@ ReAct (AgentExecutor)
 | ---------------------------------------------------- | --------------------------------------------------------------------- |
 | [docs/architecture.md](docs/architecture.md)         | Целевая архитектура: два транспорта (MCP + A2A), поток `run_pipeline` |
 | [docs/tool_contract.md](docs/tool_contract.md)       | Контракт MCP-инструментов и A2A-skill-ов: формат ответа, сессии, auth |
-| [docs/mcp_tool_catalog.md](docs/mcp_tool_catalog.md) | Auto-generated каталог 33 raw-инструментов + 3 session-tools          |
+| [docs/mcp_tool_catalog.md](docs/mcp_tool_catalog.md) | Auto-generated каталог 36 raw-инструментов + 3 session-tools          |
 | [docs/a2a_agent_card.md](docs/a2a_agent_card.md)     | Реальная карточка A2A-агента, описание полей                          |
 | [docs/deployment.md](docs/deployment.md)             | Локальный запуск + Docker compose + единая таблица env                |
 | [docs/WIKI-LLM.md](docs/WIKI-LLM.md)                 | Карта репозитория для LLM-навигации                                   |
@@ -225,12 +224,15 @@ ReAct (AgentExecutor)
 
 ## Статус
 
-**Два решения готовы:** MCP-server (`python -m blocksnet_mcp`, 33 raw-tools + 3 session-tools,
+**Два решения готовы:** MCP-server (`python -m blocksnet_mcp`, 36 raw-tools + 3 session-tools,
 без LLM) и A2A-агент (`python -m blocksnet_agent`, 2 skill-а, с LLM). Bearer auth +
 scenario_id, per-run stop, Docker с разделением зависимостей. **Финальный синтез
 (7-секционный decision memo)** собирается всегда, в `run_dir/synthesis.md` и в payload.
-**266 tests passed**, 0 регрессий.
+Контракты A2A и MCP покрыты профильными тестами.
 
-> История реализации, планы и deferred-задачи — в `docs/dev/`. Этот README описывает
-> только текущее состояние.
+**Preparation через MCP:** `build_blocks_with_services`, `prepare_accessibility_matrix`,
+`prepare_road_congestion_inputs` — три новых инструмента, которые раньше жили как
+CLI-скрипты в `scripts/`. Агент теперь сам собирает данные через них, без внешних команд.
+
+> Этот README описывает только текущее состояние продукта.
 

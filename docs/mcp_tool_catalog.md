@@ -6,7 +6,7 @@
 > Тест ``tests/test_tool_catalog_docs.py`` гарантирует, что закоммиченная
 > версия совпадает с актуальной.
 
-MCP-server ``blocksnet_mcp`` экспонирует 36 инструментов (33 каталожных
+MCP-server ``blocksnet_mcp`` экспонирует 39 инструментов (36 каталожных
 + 3 служебных: ``open_session``, ``close_session``, ``session_info``).
 
 Из каталожных инструментов:
@@ -37,6 +37,42 @@ MCP-server ``blocksnet_mcp`` экспонирует 36 инструментов 
 - `buffer_size` (`integer`, необязательный) _(default: `0)`_
 
 **ToolSpec:** `name=build_adjacency_graph`, `short='Строит граф пространственной смежности городских кварталов.'`
+
+---
+
+## `build_blocks_with_services`
+
+**Краткое описание:** Собирает ``blocks_with_services.gpkg`` из сырья в ``DATA_DIR``.
+
+**Справка:**
+
+```
+Собирает ``blocks_with_services.gpkg`` из сырья в ``DATA_DIR``.
+
+        Берёт ``blocks_path`` (по умолчанию ``DATA_DIR/blocks.gpkg``) как базовые полигоны
+        кварталов; если такого файла нет, пробует ``DATA_DIR/blocks_with_services.gpkg``
+        как готовый артефакт (no-op копия). Опционально присоединяет: ``buildings_path``
+        (population), ``functional_zones_path`` + ``land_use_rules_path`` (land_use),
+        ``DATA_DIR/services/*.geojson`` (count_<slug>; пропускается, если колонки
+        уже есть в исходнике). Каталог сервисов валидируется против ``service_type_path``.
+
+        Когда вызывать: один раз перед ``load_blocks``, если в ``DATA_DIR`` ещё нет
+        готового ``blocks_with_services.gpkg``. После сборки ``load_blocks`` подхватит
+        файл автоматически.
+
+        Не путать с: ``load_blocks`` — он только читает, не собирает.
+```
+
+**Вход:**
+
+- `blocks_path` (`string`, необязательный) _(default: `"")`_
+- `buildings_path` (`string`, необязательный) _(default: `"")`_
+- `functional_zones_path` (`string`, необязательный) _(default: `"")`_
+- `land_use_rules_path` (`string`, необязательный) _(default: `"")`_
+- `out_path` (`string`, необязательный) _(default: `"blocks_with_services.gpkg")`_
+- `service_type_path` (`string`, необязательный) _(default: `"")`_
+
+**ToolSpec:** `name=build_blocks_with_services`, `short='Собирает ``blocks_with_services.gpkg`` из сырья в ``DATA_DIR``.'`
 
 ---
 
@@ -234,8 +270,8 @@ MCP-server ``blocksnet_mcp`` экспонирует 36 инструментов 
 
         Требует в ``data_dir``: ``blocks_with_services.gpkg``,
         ``blocks_to_nodes.pickle``, ``nodes_to_nodes.pickle``,
-        ``graph_drive.graphml`` (альтернативы ``*.pkl`` и ``drive.graphml``
-        поддержаны). Сценарий подготовки: ``scripts/prepare_road_congestion_inputs.py``.
+        ``graph_drive.graphml``. Альтернативы ``*.pkl`` и ``drive.graphml``
+        поддержаны. Входные файлы готовятся до вызова инструмента.
 
         Граф: int EPSG в ``graph['crs']``, ``x``/``y`` узлов, ``time_min`` и
         ``lanes`` рёбер. ``lanes`` нормализуется как в upstream:
@@ -689,6 +725,73 @@ MCP-server ``blocksnet_mcp`` экспонирует 36 инструментов 
 *(без аргументов)*
 
 **ToolSpec:** `name=load_blocks`, `short='Загружает GeoDataFrame кварталов с сервисами из data/blocks_with_services.gpkg.'`
+
+---
+
+## `prepare_accessibility_matrix`
+
+**Краткое описание:** Готовит ``acc_mx.pickle`` (матрица доступности block→block) через Overpass.
+
+**Справка:**
+
+```
+Готовит ``acc_mx.pickle`` (матрица доступности block→block) через Overpass.
+
+        Использует ``blocksnet.relations.accessibility``:
+          - ``get_accessibility_graph(blocks, graph_type)`` — walk/drive/intermodal граф;
+          - ``calculate_accessibility_matrix(blocks, graph)`` — pandas-матрица.
+
+        Сохраняет в ``out_path`` (по умолчанию ``DATA_DIR/acc_mx.pickle``). ``load_accessibility_matrix``
+        подхватит файл автоматически.
+
+        Когда вызывать: один раз перед ``load_accessibility_matrix``, если pickle отсутствует
+        или устарел. **Overpass-запрос занимает минуты**, используйте ``graph_type='walk'``
+        для самого дешёвого варианта.
+
+        Не путать с: ``load_accessibility_matrix`` — только читает; ``compute_*_accessibility`` —
+        считает производные метрики (mean/median/max) из уже загруженной матрицы.
+```
+
+**Вход:**
+
+- `dtype` (`string`, необязательный) _(default: `"float32")`_
+- `graph_type` (`string`, необязательный) _(default: `"walk")`_
+- `out_path` (`string`, необязательный) _(default: `"acc_mx.pickle")`_
+
+**ToolSpec:** `name=prepare_accessibility_matrix`, `short='Готовит ``acc_mx.pickle`` (матрица доступности block→block) через Overpass.'`
+
+---
+
+## `prepare_road_congestion_inputs`
+
+**Краткое описание:** Готовит три файла, нужные ``compute_road_congestion``:
+
+**Справка:**
+
+```
+Готовит три файла, нужные ``compute_road_congestion``:
+          - ``graph_drive.graphml`` — drive MultiDiGraph (Overpass, ``additional_edgedata``);
+          - ``blocks_to_nodes.pickle`` — block → drive-узел (через walk-граф);
+          - ``nodes_to_nodes.pickle`` — drive-узел × drive-узел (время, мин).
+
+        Использует ``blocksnet.relations.get_accessibility_graph`` (drive/walk)
+        и ``iduedu.get_adj_matrix_gdf_to_gdf`` для матриц. ``buffer_m>0`` —
+        обрезает кварталы буфером вокруг центроида (полезно для очень больших
+        датасетов, чтобы Overpass не таймаутил).
+
+        Когда вызывать: один раз перед ``compute_road_congestion``, если файлов
+        нет или они устарели. **Overpass-запрос занимает минуты.**
+
+        Не путать с: ``compute_road_congestion`` — только считает, не готовит входы.
+```
+
+**Вход:**
+
+- `additional_edgedata` (`string`, необязательный) _(default: `"lanes")`_
+- `buffer_m` (`integer`, необязательный) _(default: `0)`_
+- `out_dir` (`string`, необязательный) _(default: `"")`_
+
+**ToolSpec:** `name=prepare_road_congestion_inputs`, `short='Готовит три файла, нужные ``compute_road_congestion``:'`
 
 ---
 

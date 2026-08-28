@@ -38,10 +38,11 @@ def test_catalog_header_marks_auto_generated() -> None:
 
 
 def test_catalog_lists_32_canonical_tools() -> None:
-    """В каталоге перечислены все 32 доменных инструмента + 3 служебных."""
+    """В каталоге перечислены все доменные инструменты + 3 служебных."""
     content = CATALOG_FILE.read_text(encoding="utf-8")
     canonical_names = [
         "build_adjacency_graph",
+        "build_blocks_with_services",
         "compute_area_accessibility",
         "compute_connectivity",
         "compute_density_indicators",
@@ -71,6 +72,8 @@ def test_catalog_lists_32_canonical_tools() -> None:
         "list_service_types",
         "load_accessibility_matrix",
         "load_blocks",
+        "prepare_accessibility_matrix",
+        "prepare_road_congestion_inputs",
         "propose_zone_development",
         "render_metric_map",
         "suggest_target_blocks",

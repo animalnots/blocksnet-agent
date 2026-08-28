@@ -1,9 +1,7 @@
 # WIKI-LLM индекс проекта
 
-Назначение: единая карта `blocksnet-agent` для LLM-навигации. Индекс помогает быстро
+Назначение: единая карта `blocksnet-agent` для навигации. Индекс помогает быстро
 выбрать нужные файлы, не загружая весь репозиторий в контекст.
-
-Дата индексации: 2026-07-23. Корень проекта: `blocksnet-agent/`.
 
 ## Как пользоваться
 
@@ -33,21 +31,21 @@
 | `blocksnet_agent/` | Ядро агента (ReAct, PTR, confidence) | При правках агента |
 | `blocksnet_agent/a2a/` | A2A-агент (FastAPI, agent_card, skills, auth) | При правках A2A-слоя |
 | `data/` | Локальная модель города и нормативы | При настройке данных |
-| `tests/` | 257 тестов | При проверке контракта |
-| `scripts/` | smoke + generate_tool_catalog + smoke_docker | При ручной проверке |
+| `tests/` | Набор unit-, contract- и integration-тестов | При проверке контракта |
+| `scripts/` | smoke + generate_tool_catalog + validate_agent_card + package_data + fetch_data | При ручной проверке |
 | `examples/` | Notebook + локальные city-sandboxes | При визуальном анализе |
 
 ## Inventory папок
 
 | Папка | Состав | Роль |
 |---|---|---|
-| `docs/` | 8 актуальных .md + `dev/` + `reports/` | Документация |
-| `blocksnet_mcp/` | `server.py`, `__init__.py`, `__main__.py`, `envelope.py`, `session.py`, `settings.py`, `agent_tool.py` (legacy), `serialize.py`, `tools_mcp.py` (shim) | MCP-обёртка |
-| `blocksnet_agent/` | Пакет агента и `tools/` (data/network/provision/services/indicators/optimize/viz/registry/demand) | Ядро агента |
+| `docs/` | 8 актуальных .md | Документация |
+| `blocksnet_mcp/` | `server.py`, `__init__.py`, `__main__.py`, `envelope.py`, `session.py`, `settings.py`, `agent_tool.py`, `serialize.py`, `tools_mcp.py` | MCP-обёртка |
+| `blocksnet_agent/` | Пакет агента и `tools/` (data/network/provision/services/indicators/optimize/preparation/viz/registry/demand) | Ядро агента |
 | `blocksnet_agent/a2a/` | `server.py`, `agent_card.py`, `auth.py`, `executor.py`, `schemas.py`, `settings.py`, `skills.py`, `task_manager.py`, `__main__.py` | A2A-агент |
 | `data/` | `service_type.json`, `archetypes.csv`, `service_aliases.json` (версионируются); gpkg/pickle — gitignored | Локальная модель города |
-| `tests/` | 16+ тест-файлов (контракт, сериализация, runtime, PTR, isolation, A2A) | 257 тестов |
-| `scripts/` | `smoke_mcp_tools.py`, `smoke_a2a_agent.py`, `generate_tool_catalog.py`, `smoke_docker.sh` | Ручная проверка |
+| `tests/` | Контракт, сериализация, runtime, PTR, isolation и A2A | Проверка реализации |
+| `scripts/` | `smoke_mcp_tools.py`, `smoke_a2a_agent.py`, `generate_tool_catalog.py`, `validate_agent_card.py`, `package_data.py`, `fetch_data.py`, `smoke_docker.sh`, `smoke_mcp_docker.py`, `smoke_client.py` | Ручная проверка |
 | `examples/` | `test_visualization.ipynb`, `saint_petersburg/`, `yuzhno-sakhalinsk/` (gitignored) | Визуализация + preprocessing |
 
 ## Документация (актуальная)
@@ -57,9 +55,9 @@
 | `docs/README.md` | Человекочитаемый индекс документации |
 | `docs/WIKI-LLM.md` | Этот LLM-навигационный индекс |
 | `docs/architecture.md` | Целевая архитектура: два транспорта (MCP + A2A), поток `run_pipeline` |
-| `docs/tool_contract.md` | Контракт: 33 MCP-tools, 2 A2A skill-а, сессии, auth |
+| `docs/tool_contract.md` | Контракт: 36 MCP-tools, 2 A2A skill-а, сессии, auth |
 | `docs/deployment.md` | Quickstart (локальный + Docker), env-таблица |
-| `docs/mcp_tool_catalog.md` | Auto-generated каталог 33 raw-инструментов |
+| `docs/mcp_tool_catalog.md` | Auto-generated каталог 36 raw-инструментов |
 | `docs/a2a_agent_card.md` | Реальная карточка A2A-агента, описание полей |
 
 ## Целевой MCP-слой
@@ -71,7 +69,7 @@
 | `blocksnet_mcp/README.md` | Индекс и правила ответственности MCP-слоя |
 | `blocksnet_mcp/__init__.py` | Lazy re-export через `__getattr__` — `import blocksnet_mcp` не тянет LLM-стек |
 | `blocksnet_mcp/__main__.py` | `python -m blocksnet_mcp` → stdio |
-| `blocksnet_mcp/server.py` | FastMCP, lazy singleton (`get_mcp()`), stdio-транспорт, каталог 32+3 инструментов, сессии с `scenario_id`, per-request tools (изоляция) |
+| `blocksnet_mcp/server.py` | FastMCP, lazy singleton (`get_mcp()`), stdio-транспорт, каталог 36+3 инструментов, сессии с `scenario_id`, per-request tools (изоляция) |
 | `blocksnet_mcp/envelope.py` | Envelope (`status`/`tool`/`session_id`/`text`/`artifacts`/`error_code`/`error`) + локальная копия `is_failed_observation` |
 | `blocksnet_mcp/session.py` | SessionStore: LRU+TTL, изоляция state, `scenario_id` привязка |
 | `blocksnet_mcp/settings.py` | `MCPSettings`: pydantic-settings, env-алиасы, `reset_mcp_settings()`. Все LLM-поля optional |
@@ -96,7 +94,7 @@
 | `blocksnet_agent/llm.py` | OpenAI-compatible LLM |
 | `blocksnet_agent/metrics.py` | Метрики и инварианты C1/C2/C3 |
 | `blocksnet_agent/tools/` | Доменные инструменты BlocksNet и RAG-справка по tools |
-| `blocksnet_agent/synthesis.py` | **P-S5.x:** Финальный структурный синтез ответа. Перенесён из `fp2mp-core/nodes/synthesis.py` (паттерн 7-секционного decision memo). `FinalSynthesis` + `synthesize()` + `write_synthesis()` + `collect_evidence()`. **Инвариант 6 в `architecture.md` §6 — стабильная точка вызова** |
+| `blocksnet_agent/synthesis.py` | Финальный структурный синтез ответа (7-секционный decision memo): `FinalSynthesis` + `synthesize()` + `write_synthesis()` + `collect_evidence()`. **Инвариант 6 в `architecture.md` §6 — стабильная точка вызова** |
 
 ## A2A-агент
 
@@ -110,7 +108,7 @@
 | `blocksnet_agent/a2a/settings.py` | `A2ASettings(Settings)`: LLM + transport + auth + concurrency |
 | `blocksnet_agent/a2a/skills.py` | `SKILLS` реестр: `run_pipeline` + `analyze_urban_question` (DEPRECATED) |
 | `blocksnet_agent/a2a/task_manager.py` | `TaskManager`: Semaphore, per-run stop_event, TTL cleanup |
-| `blocksnet_agent/a2a/auth.py` | FastAPI middleware для Bearer-токена; fail-fast при `AUTH_ENABLED=true` без `MAS_BEARER_TOKEN` |
+| `blocksnet_agent/a2a/auth.py` | FastAPI middleware для Bearer-токена; fail-fast при `A2A_AUTH_ENABLED=true` без `A2A_MAS_BEARER_TOKEN` |
 | `blocksnet_agent/a2a/__main__.py` | `python -m blocksnet_agent.a2a` |
 
 ## Данные
@@ -128,7 +126,7 @@
 
 | Команда | Роль |
 |---|---|
-| `.venv/bin/python -m pytest` | Все тесты (266 passed, 25 файлов: +P-S5.4 `tests/test_synthesis.py`, 9 новых тестов) |
+| `.venv/bin/python -m pytest` | Все тесты |
 | `.venv/bin/python -m pip check` | Проверка зависимостей |
 | `DATA_DIR=data/saint_petersburg .venv/bin/python -m blocksnet_mcp` | Точка входа stdio MCP |
 | `DATA_DIR=data/saint_petersburg .venv/bin/python -m blocksnet_agent` | Точка входа A2A HTTP |
@@ -165,7 +163,7 @@
 | `tests/test_runtime_stop_scope.py` | Per-run stop_event изоляция |
 | `tests/test_settings_inheritance.py` | Settings inheritance |
 | `tests/test_tool_catalog_docs.py` | Auto-generated каталог не протухает |
-| `tests/test_synthesis.py` | **P-S5.4:** Synthesis-узел (5 кейсов: full data, partial, all-failed, llm-error, to-short + back-compat `to_json`) |
+| `tests/test_synthesis.py` | Synthesis-узел и обратная совместимость `to_json` |
 
 ## Потоки работ
 
@@ -187,10 +185,5 @@
 - Источник истины по поведению агента: код `blocksnet_agent/` (файлы перечислены выше).
 - Источник истины по поведению MCP: код `blocksnet_mcp/`.
 - Источник истины по поведению A2A: код `blocksnet_agent/a2a/`.
-- Источник истины по `.env` параметрам: `.env.example`.
-- Источник истины по тестовому покрытию: `tests/` (25 файлов, 266 passed после шага P-S5.x).
-
-> **Планы реализации, отчёты о завершённых этапах, история решений и deferred-задачи**
-> находятся в `docs/dev/`. Эти материалы не описывают текущее состояние продукта и
-> используются при расширении функциональности. Папка `docs/dev/` самодостаточна
-> (см. `docs/dev/README.md`).
+| Источник истины по `.env` параметрам: `.env.example`.
+- Источник истины по тестовому покрытию: `tests/`.

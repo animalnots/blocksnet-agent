@@ -9,11 +9,10 @@
 
 `blocksnet-agent` включает два решения для городской аналитики поверх `BlocksNetAgent`:
 
-- **MCP-server** (`python -m blocksnet_mcp`) — stdio, 33 raw-tools + 3 session-tools.
+- **MCP-server** (`python -m blocksnet_mcp`) — stdio, 36 raw-tools + 3 session-tools.
 **Не требует LLM** — может работать на чистых данных.
-- **A2A-агент** (`python -m blocksnet_agent`) — HTTP, 2 skill-а (`run_pipeline`,  
-`analyze_urban_question` DEPRECATED). Требует LLM через OpenAI-compatible endpoint  
-(Ollama Cloud, OpenRouter, локальный).
+- **A2A-агент** (`python -m blocksnet_agent`) — HTTP, 2 skill-а: `run_pipeline`
+и `analyze_urban_question` DEPRECATED. Требует LLM через OpenAI-compatible endpoint.
 
 ---
 
@@ -22,8 +21,6 @@
 > **Интеграция в CodeSynapse (MAS):** значения регистрации, процедура
 > подключения и разбор типовых ошибок — в
 > [docs/codesynapse_registration.md](docs/codesynapse_registration.md).
-> Соответствие контракту и открытые вопросы —
-> [docs/reports/codesynapse_contract_compliance.md](docs/reports/codesynapse_contract_compliance.md).
 
 ## Способ 1 — Локальный запуск без Docker (самый быстрый)
 
@@ -43,18 +40,22 @@ mkdir -p data/saint_petersburg
 # Должно быть: data/saint_petersburg/blocks_with_services.gpkg
 #             data/saint_petersburg/acc_mx.pickle
 #
-# Для ``compute_road_congestion`` дополнительно нужны три файла, которые
-# готовит ``scripts/prepare_road_congestion_inputs.py`` (см. R4 плана
-# ``docs/dev/plans/road_congestion.md``):
+# Для ``compute_road_congestion`` дополнительно нужны три заранее
+# подготовленных файла:
 #
 #   data/saint_petersburg/blocks_to_nodes.pickle
 #   data/saint_petersburg/nodes_to_nodes.pickle
 #   data/saint_petersburg/graph_drive.graphml
 #
-# Пример:
-#   DATA_DIR=data/saint_petersburg python -m scripts.prepare_road_congestion_inputs
 
-# 4. Запустить A2A-агента (HTTP, FastAPI)
+
+# 4. Подготовка данных через MCP-инструменты (если что-то отсутствует)
+#    Агент сам вызовет их при необходимости; можно и вручную через MCP-stdio:
+DATA_DIR=data/saint_petersburg python -m blocksnet_mcp
+#   → вызвать build_blocks_with_services() / prepare_accessibility_matrix() /
+#     prepare_road_congestion_inputs() при отсутствии соответствующих файлов.
+
+# 5. Запустить A2A-агента (HTTP, FastAPI)
 DATA_DIR=data/saint_petersburg python -m blocksnet_agent
 # → http://0.0.0.0:8080/ (Agent Card, JSON-RPC /, /health)
 
@@ -66,7 +67,7 @@ DATA_DIR=data/saint_petersburg python -m blocksnet_mcp
 **Проверка работоспособности:**
 
 ```bash
-# pytest (257 tests)
+# pytest
 pytest -q
 
 # Health endpoint
@@ -75,7 +76,7 @@ curl http://localhost:8080/health
 # Agent Card
 curl http://localhost:8080/.well-known/agent-card.json | jq
 
-# Реальный вопрос агенту (через A2A executor, ~180 сек на 4 итерации)
+# Реальный вопрос агенту
 DATA_DIR=data/saint_petersburg python -c "
 import sys, json, time; sys.path.insert(0, '.')
 from blocksnet_mcp.tools_mcp import analyze_urban_question
@@ -170,18 +171,10 @@ docker compose down
 
 Для "просто запустить" хватит первых 3 документов.
 
-> **Перед разверткой в production** — обязателен pre-deployment checklist в
-> `docs/dev/deferred/pre-deployment-checklist.md` (12 пунктов). Папка `docs/dev/`
-> содержит **только рабочие материалы** — планы реализации, отчёты о завершённых
-> этапах, отложенные задачи. Для пользователя системы это не нужно; для разработчика —
-> опционально при расширении функциональности.
-
 ---
 
 
 
 ## Если что-то непонятно
 
-Эта документация покрывает текущее состояние системы. Для полного погружения
-(история решений, планы, отчёты) — см. `docs/dev/README.md` (внутренний индекс
-разделов разработки).
+Эта документация покрывает текущее состояние системы.

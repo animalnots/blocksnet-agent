@@ -8,6 +8,7 @@ from blocksnet_agent.tools.data import make_data_tools
 from blocksnet_agent.tools.indicators import make_indicators_tools
 from blocksnet_agent.tools.network import make_network_tools
 from blocksnet_agent.tools.optimize import make_optimize_tools
+from blocksnet_agent.tools.preparation import make_preparation_tools
 from blocksnet_agent.tools.provision import make_provision_tools
 from blocksnet_agent.tools.registry import build_tool_registry, make_help_tools
 from blocksnet_agent.tools.services import make_services_tools
@@ -180,6 +181,7 @@ def make_tools(
         + make_indicators_tools(ctx)
         + make_optimize_tools(ctx)
         + make_viz_tools(ctx)
+        + make_preparation_tools(ctx)
     )
     # P1.1: терминальный ``submit_answer`` — финальный структурный ответ. Добавляется
     # в общий набор инструментов, агент вызывает его в самом конце. Без этого

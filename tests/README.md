@@ -1,11 +1,10 @@
 # Индекс `tests/`
 
-Назначение: контрактные тесты MCP-server и unit-тесты сериализации/пайплайна.
+Назначение: контрактные тесты MCP-server, unit-тесты сериализации, runtime и A2A.
 
-Тесты проверяют тонкий слой обёртки и структурные части рассуждающего ядра (submit_answer,
-P1.2-confidence, P1.6-overlay, кэш provision, PTR-классификатор), а **не** качество LLM-рассуждения
-в целом. Для поведения агента источник истины — в `blocksnet_agent/` и upstream-проекте
-`blocksnet-agent`.
+Тесты проверяют тонкий слой обёртки и структурные части рассуждающего ядра
+(`submit_answer`, P1.2-confidence, P1.6-overlay, кэш provision, PTR-классификатор),
+а **не** качество LLM-рассуждения в целом.
 
 ## Тесты
 
@@ -25,15 +24,34 @@ P1.2-confidence, P1.6-overlay, кэш provision, PTR-классификатор)
 | `test_tool_failure_dedup.py` | Дедупликация повторных failed-вызовов (P0.4: invalidation по версии state) |
 | `test_no_data_grounding.py` | Поведение при отсутствии данных: `NO_DATA` маркеры, явные `limitations` |
 | `test_experiment_harness.py` | Локальный harness для прогона экспериментов на `examples/saint_petersburg/` |
+| `test_preparation_tools.py` | Три новых preparation-tools: `build_blocks_with_services`, `prepare_accessibility_matrix`, `prepare_road_congestion_inputs` (fallback на готовый gpkg, no-op, явные ошибки) |
+| `test_mcp_session.py` | SessionStore LRU+TTL |
+| `test_mcp_session_scenario.py` | Привязка `scenario_id` |
+| `test_mcp_tool_exposure.py` | 36 tools в каталоге, `submit_answer` не экспонирован |
+| `test_image_deps.py` | MCP без LLM-зависимостей (для изоляции образа) |
+| `test_a2a_card.py` | Agent Card имеет 2 skill-а |
+| `test_a2a_tasks.py` | TaskManager concurrent + TTL |
+| `test_a2a_skills.py` | SKILLS контракт |
+| `test_auth.py` | authcore + middleware |
+| `test_context_adapter.py` | `resolve_context` + path-traversal защита |
+| `test_runtime_stop_scope.py` | Per-run stop_event изоляция |
+| `test_settings_inheritance.py` | Settings inheritance |
+| `test_tool_catalog.py` | Build catalog: 36 tools корректно собирается |
+| `test_tool_catalog_docs.py` | Auto-generated каталог не протухает (актуальная версия в `docs/mcp_tool_catalog.md`) |
+| `test_synthesis.py` | Synthesis-узел и обратная совместимость `to_json` |
+| `test_codesynapse_contract.py` | Контракт с CodeSynapse-регистрацией |
+| `test_codesynapse_mcp.py` | MCP-интеграция с CodeSynapse |
+| `test_image_deps.py` | MCP без LLM-зависимостей (для изоляции образа) |
+| `test_road_congestion_tool.py` | Контракт `compute_road_congestion` |
+| `test_service_resolution.py` | Резолвер сервисов по `service_type.json` |
 
 ## Запуск
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest tests
+```bash
+.venv/bin/python -m pytest tests
 ```
 
-Текущий результат в локальном окружении Python `3.10.11`: все тесты `passed`. Полный отчёт по
-качественным прогонам 06.07.2026 — в `../docs/reports/run_quality_report_20260706_spb.md`.
+Все тесты должны проходить (`passed`) на Python 3.10+.
 
 ## Минимальные проверки (MCP-контракт)
 

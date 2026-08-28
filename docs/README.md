@@ -1,8 +1,11 @@
 # Документация `blocksnet-agent`
 
 **MCP-server + A2A-агент городской аналитики** поверх `BlocksNetAgent`.
-MCP-server экспонирует 33 raw-tools + 3 session-tools через MCP-stdio, а A2A-агент — 2 skill-а
+MCP-server экспонирует 36 raw-tools + 3 session-tools через MCP-stdio, а A2A-агент — 2 skill-а
 (`run_pipeline`, `analyze_urban_question`) через A2A-HTTP.
+
+Три новых preparation-tools покрывают сборку `blocks_with_services.gpkg`, `acc_mx.pickle`
+и road_congestion inputs через MCP-инструменты (раньше это были CLI-скрипты в `scripts/`).
 
 | Документ | О чём |
 |---|---|
@@ -23,7 +26,7 @@ MCP-server экспонирует 33 raw-tools + 3 session-tools через MCP-
 | `architecture.md` | Целевая архитектура: двух-транспортная диаграмма, поток `run_pipeline`, граница ответственности |
 | `tool_contract.md` | Контракт: 33 MCP-tools, 2 A2A skill-а, сессии, auth |
 | `deployment.md` | Локальный запуск + Docker compose + единая env-таблица |
-| `mcp_tool_catalog.md` | Auto-generated из живого кода (`scripts/generate_tool_catalog.py`). 33 raw-tools + 3 session |
+| `mcp_tool_catalog.md` | Auto-generated из живого кода (`scripts/generate_tool_catalog.py`). 36 raw-tools + 3 session |
 | `a2a_agent_card.md` | Реальная карточка A2A-агента с описанием полей и SDK-версией |
 | `WIKI-LLM.md` | LLM-карта: что где лежит, маршруты чтения |
 
@@ -35,9 +38,3 @@ MCP-server экспонирует 33 raw-tools + 3 session-tools через MCP-
 | Найти нужный файл для правки | [WIKI-LLM.md](WIKI-LLM.md) |
 | Понять контракт инструмента | [tool_contract.md](tool_contract.md) или [mcp_tool_catalog.md](mcp_tool_catalog.md) |
 | Развернуть локально или в Docker | [deployment.md](deployment.md) |
-
-> **Рабочие материалы** (планы реализации, отчёты о завершённых этапах, отложенные
-> задачи, pre-deployment checklist, история решений) находятся в `docs/dev/`.
-> Эти документы не описывают текущее состояние продукта — они нужны только при
-> расширении функциональности или подготовке к production-развертке. Папка
-> `docs/dev/` самодостаточна: у неё свой `README.md` с навигацией.
