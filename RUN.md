@@ -18,9 +18,7 @@
 
 
 
-> **Интеграция в CodeSynapse (MAS):** значения регистрации, процедура
-> подключения и разбор типовых ошибок — в
-> [docs/codesynapse_registration.md](docs/codesynapse_registration.md).
+> **Интеграция в CodeSynapse (MAS):** значения регистрации и процедура подключения — в `docs/dev/codesynapse_registration.md` (developer-документ, нужен только при регистрации в MAS).
 
 ## Способ 1 — Локальный запуск без Docker (самый быстрый)
 

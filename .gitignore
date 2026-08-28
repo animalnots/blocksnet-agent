@@ -67,6 +67,7 @@ scripts/.*~
 !scripts/validate_agent_card.py
 !scripts/package_data.py
 !scripts/fetch_data.py
+!scripts/inject_release_urls.py
 
 # Whitelist: smoke-проверки MCP/A2A (CI + локальный регресс)
 !scripts/smoke_client.py

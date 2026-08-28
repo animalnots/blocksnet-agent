@@ -65,6 +65,10 @@ python scripts/fetch_data.py saint-petersburg --tag v2026-data-spb --repo <owner
 
 # Проверка A2A Agent Card (для CodeSynapse-регистрации)
 python scripts/validate_agent_card.py --url http://localhost:8080
+
+# Заполнить release_url в manifest.json после создания GitHub-релизов
+python scripts/inject_release_urls.py
+# (по умолчанию — Eynor-K/blocksnet-agent, теги v2026-data-spb, v2026-data-yuzhno-sakhalinsk)
 ```
 
 ## Что было удалено (логика переехала в MCP-tools)

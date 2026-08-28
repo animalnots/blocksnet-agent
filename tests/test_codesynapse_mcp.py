@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MCP_SEGMENT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
 OPENAI_FUNCTION_NAME_MAX_LEN = 64
 
-#: Предлагаемый Server ID при регистрации (см. M5 / docs/codesynapse_registration.md).
+#: Предлагаемый Server ID при регистрации (см. M5 / docs/dev/codesynapse_registration.md).
 PROPOSED_SERVER_ID = "blocksnet"
 
 #: Инструменты, читающие ``state[result_key]`` — самые уязвимые к холодной сессии.

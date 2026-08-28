@@ -56,30 +56,16 @@ python scripts/package_data.py
 # 2. Создать релизы (через gh CLI)
 gh release create v2026-data-spb      data/_releases/saint-petersburg-data.zip \
   --title "Saint-Petersburg data snapshot 2026" \
-  --notes "Блоки, здания, сервисы, acc_mx. ~494 МБ."
-
-gh release create v2026-data-vasilievsky-island \
-  data/_releases/vasilievsky-island-data.zip \
-  --title "Vasilievsky Island data snapshot 2026" \
-  --notes "Road_congestion inputs готовы. acc_mx.pickle отсутствует."
+  --notes "Блоки, здания, сервисы, acc_mx. ~331 МБ."
 
 gh release create v2026-data-yuzhno-sakhalinsk \
   data/_releases/yuzhno-sakhalinsk-data.zip \
   --title "Yuzhno-Sakhalinsk data snapshot 2026" \
-  --notes "Только сырьё, blocks_with_services.gpkg отсутствует."
+  --notes "blocks_with_services.gpkg готов. ~7 МБ."
 
 # 3. Опционально: прописать release_url в manifest.json (для удобства fetch_data.py)
-python - <<'PY'
-import json
-from pathlib import Path
-m = json.loads(Path("data/manifest.json").read_text())
-m["scenarios"]["saint-petersburg"]["release_url"] = (
-    "https://github.com/<owner>/blocksnet-agent/releases/download/"
-    "v2026-data-spb/saint-petersburg-data.zip"
-)
-# ... аналогично для других сценариев
-Path("data/manifest.json").write_text(json.dumps(m, indent=2, ensure_ascii=False))
-PY
+python scripts/inject_release_urls.py
+# (по умолчанию — Eynor-K/blocksnet-agent, теги v2026-data-spb, v2026-data-yuzhno-sakhalinsk)
 git add data/manifest.json && git commit -m "chore(data): pin release URLs"
 ```
 

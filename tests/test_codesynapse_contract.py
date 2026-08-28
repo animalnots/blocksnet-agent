@@ -694,12 +694,12 @@ def test_artifact_part_modes_stay_within_declared_modes(served_card) -> None:
 # --- H2: регистрационный пакет не расходится с кодом ------------------------
 
 
-REGISTRATION_DOC = PROJECT_ROOT / "docs" / "codesynapse_registration.md"
+REGISTRATION_DOC = PROJECT_ROOT / "docs" / "dev" / "codesynapse_registration.md"
 
 
 def test_registration_doc_exists() -> None:
     assert REGISTRATION_DOC.is_file(), (
-        "docs/codesynapse_registration.md — единственная инструкция для "
+        "docs/dev/codesynapse_registration.md — единственная инструкция для "
         "принимающей стороны, без неё передача не состоится"
     )
 

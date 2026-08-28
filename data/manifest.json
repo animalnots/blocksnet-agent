@@ -288,7 +288,8 @@
       "notes": [
         "compute_road_congestion НЕ готов (нет graph_drive/b2n/n2n).",
         "Для road_congestion: scripts/prepare_road_congestion_inputs.py."
-      ]
+      ],
+      "release_url": "https://github.com/Eynor-K/blocksnet-agent/releases/download/v2026-data-spb/saint-petersburg-data.zip"
     },
     "yuzhno-sakhalinsk": {
       "scenario_id": "yuzhno-sakhalinsk",
@@ -520,7 +521,8 @@
         "compute_road_congestion НЕ готов (нет graph_drive/b2n/n2n).",
         "blocks_with_services.gpkg = переименованный blocks.gpkg (содержит всё для provision).",
         "Для road_congestion: scripts/prepare_road_congestion_inputs.py (адаптировать путь)."
-      ]
+      ],
+      "release_url": "https://github.com/Eynor-K/blocksnet-agent/releases/download/v2026-data-yuzhno-sakhalinsk/yuzhno-sakhalinsk-data.zip"
     }
   }
 }
