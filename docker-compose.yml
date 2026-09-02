@@ -1,8 +1,9 @@
 # a2a/07: docker-compose для локальной разработки / smoke.
 #
 # Сервисы:
-#   agent  — A2A-сервер (LLM), EXPOSE 8080, /health
-#   mcp    — MCP-сервер (stdio) — для клиентов, не для HTTP
+#   agent    — A2A-сервер (LLM), EXPOSE 8080, /health
+#   mcp      — MCP-сервер (stdio) — для клиентов, не для HTTP
+#   mcp-http — MCP-сервер (streamable-http), EXPOSE 8001, /mcp + /health
 #
 # Данные (`./data`, `./outputs`) монтируются read-write на оба сервиса
 # (MCP читает то, что материализовал агент; либо — в MAS-цепочке,
@@ -71,6 +72,46 @@ services:
       start_period: 5s
     mem_limit: 2g
     cpus: 1.0
+
+  # MCP-сервер по HTTP (streamable-http) — для сетевых клиентов (Synapse,
+  # любой MCP-клиент вне compose). ``mcp`` выше остаётся stdio.
+  # Собирается из Dockerfile.agent, а не Dockerfile.mcp: ``analyze_urban_question``
+  # импортирует ``blocksnet_agent`` (langgraph/langchain), которых в mcp-образе нет.
+  mcp-http:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    image: blocksnet-agent/agent:latest
+    container_name: blocksnet-mcp-http
+    restart: unless-stopped
+    entrypoint: ["python", "-m", "blocksnet_mcp"]
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data:/app/data:ro
+      - ./outputs:/app/outputs:rw
+    env_file:
+      - .env
+    environment:
+      - TRANSPORT=http
+      - HOST=0.0.0.0
+      - PORT=8001
+      - MCP_PATH=/mcp
+      - DATA_DIR=/app/data
+      - OUTPUT_DIR=/app/outputs
+      - MAX_SESSIONS=8
+      - SESSION_TTL_SEC=1800
+      # Датасет на сетевом экспорте (NFS/GPFS) не даёт SQLite POSIX-локи и GDAL
+      # падает с "disk I/O error"; через собственный VFS GDAL лок не просит.
+      - SQLITE_USE_OGR_VFS=YES
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    mem_limit: 4g
+    cpus: 2.0
 
 networks:
   default:

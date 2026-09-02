@@ -57,6 +57,10 @@ cp .env.example .env
 # 1) MCP-server (stdio) — для MCP-клиентов
 python -m blocksnet_mcp
 
+# 1b) MCP-server по HTTP (streamable-http) — для сетевых MCP-клиентов (Synapse и т.п.)
+TRANSPORT=http HOST=0.0.0.0 PORT=8001 python -m blocksnet_mcp
+# → http://0.0.0.0:8001/mcp (MCP), http://0.0.0.0:8001/health (data_ready, datasets)
+
 # 2) A2A-агент (HTTP) — для standalone / MAS
 python -m blocksnet_agent
 # → http://0.0.0.0:8080/ (Agent Card, JSON-RPC /, /health)
@@ -69,9 +73,16 @@ python -m blocksnet_agent
 ```bash
 docker compose build
 docker compose up -d
-# agent — http://localhost:8080
-# mcp   — stdio (для MCP-клиента: docker compose exec mcp python -m blocksnet_mcp)
+# agent    — http://localhost:8080
+# mcp      — stdio (для MCP-клиента: docker compose exec mcp python -m blocksnet_mcp)
+# mcp-http — http://localhost:8001/mcp (streamable-http) + /health
 ```
+
+`mcp-http` — тот же MCP-сервер, но по streamable-http: `TRANSPORT=http`,
+`HOST`/`PORT`/`MCP_PATH` (или `MCP_HOST`/`MCP_PORT`) задают адрес. Собирается из
+`Dockerfile.agent`, потому что `analyze_urban_question` требует LLM-стек агента.
+Если `data/` лежит на сетевом экспорте (NFS/GPFS), оставьте `SQLITE_USE_OGR_VFS=YES`:
+без него SQLite не получает POSIX-лок на `.gpkg` и GDAL отвечает `disk I/O error`.
 
 Подробнее — [docs/deployment.md](docs/deployment.md).
 

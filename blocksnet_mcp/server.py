@@ -417,13 +417,74 @@ def _register_agent_tool(mcp: FastMCP) -> None:
 
 def _build_server() -> FastMCP:
     """Создаёт и настраивает FastMCP с зарегистрированными инструментами."""
-    mcp_instance = FastMCP("blocksnet")
+    settings = get_mcp_settings()
+    # host/port/path нужны только streamable-http; для stdio FastMCP их игнорирует.
+    mcp_instance = FastMCP(
+        "blocksnet",
+        host=settings.host,
+        port=settings.port,
+        streamable_http_path=settings.mcp_path,
+    )
     _register_catalog_tools(mcp_instance)
     _register_session_tools(mcp_instance)
-    settings = get_mcp_settings()
     if settings.enable_agent_tool:
         _register_agent_tool(mcp_instance)
+    _register_health_route(mcp_instance)
     return mcp_instance
+
+
+# --- HTTP-транспорт: /health и выбор транспорта ---------------------------
+
+
+def health_payload() -> dict[str, Any]:
+    """Ответ ``GET /health`` (только streamable-http).
+
+    ``data_ready`` — оба базовых файла датасета на месте; без них
+    ``analyze_urban_question`` и ``load_*`` вернут failed-envelope, поэтому
+    статус ``degraded``, а не ``ok``.
+    """
+    settings = get_mcp_settings()
+    data_dir = settings.data_dir
+    # Датасет лежит либо прямо в DATA_DIR (одиночный город), либо в
+    # подкаталогах-сценариях (``data_dir/<scenario_id>``, см. session.py).
+    datasets = sorted(
+        candidate.name
+        for candidate in ([data_dir] + [c for c in data_dir.iterdir() if c.is_dir()])
+        if _has_base_dataset(candidate)
+    ) if data_dir.is_dir() else []
+    data_ready = bool(datasets)
+    return {
+        "status": "ok" if data_ready else "degraded",
+        "server": "blocksnet",
+        "transport": resolve_transport(settings.transport),
+        "data_ready": data_ready,
+        "data_dir": str(data_dir),
+        "datasets": datasets,
+    }
+
+
+def _has_base_dataset(path: Path) -> bool:
+    return (path / "blocks_with_services.gpkg").is_file() and (path / "acc_mx.pickle").is_file()
+
+
+def _register_health_route(mcp: FastMCP) -> None:
+    """``GET /health`` для compose/оркестратора; в stdio-режиме маршрут не виден."""
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse
+
+    @mcp.custom_route("/health", methods=["GET"])
+    async def health(_request: Request) -> JSONResponse:
+        return JSONResponse(health_payload())
+
+
+def resolve_transport(raw: str | None) -> str:
+    """``TRANSPORT`` → имя транспорта FastMCP (``stdio`` | ``streamable-http``)."""
+    value = (raw or "stdio").strip().lower()
+    if value == "stdio":
+        return "stdio"
+    if value in {"http", "streamable-http", "streamable_http"}:
+        return "streamable-http"
+    raise ValueError(f"TRANSPORT must be 'stdio' or 'http', got {raw!r}")
 
 
 # ``mcp`` как lazy singleton — инициализируется при первом обращении
@@ -450,14 +511,20 @@ def get_mcp() -> FastMCP:
 
 
 def main() -> None:
-    """``python -m blocksnet_mcp`` — stdio MCP-сервер."""
+    """``python -m blocksnet_mcp`` — MCP-сервер: stdio (default) или streamable-http.
+
+    ``TRANSPORT=http`` поднимает streamable-http на ``HOST:PORT`` (``MCP_PATH``)
+    с ``GET /health``; любое другое значение кроме ``stdio`` — ошибка на старте,
+    а не тихий откат к stdio (иначе сетевой деплой молча слушает только stdin).
+    """
     logging.basicConfig(
         level=logging.WARNING,
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
+    transport = resolve_transport(get_mcp_settings().transport)
     # main() идёт через lazy singleton — триггерит инициализацию здесь,
     # а не на этапе ``import blocksnet_mcp.server``.
-    get_mcp().run(transport="stdio")
+    get_mcp().run(transport=transport)
 
 
 if __name__ == "__main__":

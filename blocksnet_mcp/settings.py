@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
 
 
@@ -50,6 +50,14 @@ class MCPSettings(BaseSettings):
     # ``MAS_BEARER_TOKEN`` (fail-fast на старте).
     auth_enabled: bool = Field(default=False, validation_alias="AUTH_ENABLED")
     mas_bearer_token: str | None = Field(default=None, validation_alias="MAS_BEARER_TOKEN")
+    # Транспорт MCP-сервера: ``stdio`` (по умолчанию — локальные клиенты) или
+    # ``http`` — streamable-http на ``HOST:PORT`` + ``MCP_PATH`` для сетевых
+    # клиентов (Synapse). ``MCP_HOST``/``MCP_PORT`` приняты как синонимы, чтобы
+    # не пересекаться с ``A2A_HOST``/``A2A_PORT`` агента в общем ``.env``.
+    transport: str = Field(default="stdio", validation_alias="TRANSPORT")
+    host: str = Field(default="127.0.0.1", validation_alias=AliasChoices("MCP_HOST", "HOST"))
+    port: int = Field(default=8001, validation_alias=AliasChoices("MCP_PORT", "PORT"))
+    mcp_path: str = Field(default="/mcp", validation_alias="MCP_PATH")
 
     model_config = {
         "populate_by_name": True,
