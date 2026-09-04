@@ -17,7 +17,9 @@ dependencies = []
 # Базовый MCP-сервер: stdio/FastMCP + блокснет-аналитика.
 # БЕЗ langchain/langgraph/tiktoken/a2a — MCP-контейнер не должен тянуть LLM-стек.
 mcp = [
-    "mcp>=1.9.0",
+    # <2: mcp 2.x renamed FastMCP -> MCPServer and removed mcp.server.fastmcp, which
+    # server.py imports; an unpinned resolve pulls 2.x and the server crash-loops on boot.
+    "mcp>=1.9.0,<2",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.0.0",
     "geopandas>=0.14.0",
