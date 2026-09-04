@@ -9,7 +9,7 @@
 # LLM-переменные НЕ объявлять — это витрина того, что MCP их не требует.
 
 # ---- Stage 1: builder (сборка колёс) -------------------------------------
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim-bookworm AS builder
 
 # Системные зависимости для geopandas/blocksnet: GDAL, GEOS, PROJ.
 # Без них образ не соберётся.
@@ -35,16 +35,15 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .[mcp]
 
 # ---- Stage 2: runtime (slim) ----------------------------------------------
-FROM python:3.11-slim AS runtime
+FROM python:3.11-slim-bookworm AS runtime
 
 # Минимальный набор рантайм-зависимостей (без -dev пакетов).
-# a2a/07 fix: python:3.11-slim основан на Debian 12 (bookworm), а не Ubuntu.
-# Правильные имена пакетов: libgdal36, libgeos-c1t64, libproj25.
-# 'libgeos3*' — wildcard для libgeos3.13.1 (bookworm) и совместимости с Ubuntu.
+# Базовый образ закреплён на bookworm: имена рантайм-библиотек зависят от релиза
+# Debian (bookworm: libgdal32/libgeos-c1v5; trixie: libgdal36/libgeos-c1t64),
+# а плавающий тег python:3.11-slim уже переехал на trixie.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgdal36 \
-    libgeos-c1t64 \
-    'libgeos3*' \
+    libgdal32 \
+    libgeos-c1v5 \
     libproj25 \
     && rm -rf /var/lib/apt/lists/*
 

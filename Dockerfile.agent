@@ -4,7 +4,7 @@
 # langchain-openai, langgraph, tiktoken. Использует agent-extras.
 
 # ---- Stage 1: builder (сборка колёс) -------------------------------------
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim-bookworm AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -26,12 +26,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .[agent]
 
 # ---- Stage 2: runtime (slim) ----------------------------------------------
-FROM python:3.11-slim AS runtime
+FROM python:3.11-slim-bookworm AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgdal36 \
-    libgeos-c1t64 \
-    'libgeos3*' \
+    libgdal32 \
+    libgeos-c1v5 \
     libproj25 \
     curl \
     && rm -rf /var/lib/apt/lists/*
