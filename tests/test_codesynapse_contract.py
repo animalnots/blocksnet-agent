@@ -704,17 +704,32 @@ def test_declared_output_modes_are_understood_by_synapse(served_card) -> None:
     )
 
 
-def test_artifact_part_modes_stay_within_declared_modes(served_card) -> None:
-    """Их validate_part_output_mode сверяет каждую часть с объявленным."""
+def test_artifact_part_modes_stay_within_declared_modes(served_card, tmp_path) -> None:
+    """Их validate_part_output_mode сверяет mediaType каждой части результата с
+    объявленными **по точному совпадению** (a2a_output_mode_violation) — «любой
+    text/*» не спасает. Прогоняем все типы, которые умеем встраивать, плюс части
+    analysis-result."""
+    from blocksnet_agent.a2a.artifacts import _EMBEDDABLE
+
     declared = {m.lower() for m in served_card["defaultOutputModes"]}
-    task = _exchange({"status": "ok", "result": "ok"})
+    run_dir = tmp_path / "run-1"
+    run_dir.mkdir()
+    names = []
+    for suffix in _EMBEDDABLE:
+        path = run_dir / f"file{suffix}"
+        path.write_text("{}" if suffix in (".json", ".geojson") else "x", encoding="utf-8")
+        names.append(path.name)
+
+    task = _exchange({"status": "ok", "result": "ok", "run_dir": str(run_dir), "artifacts": names})
+
+    assert len(task["artifacts"]) == 1 + len(names), [a["name"] for a in task["artifacts"]]
     for artifact in task["artifacts"]:
         for part in artifact["parts"]:
             mode = (part.get("mediaType") or "").lower()
-            if not mode:
-                continue
-            ok = mode in declared or mode.startswith("text/") or mode.endswith("+json")
-            assert ok, f"{mode} не входит в объявленные {sorted(declared)}"
+            assert mode, f"{artifact['name']}: часть без mediaType"
+            assert mode in declared, (
+                f"{artifact['name']}: {mode} не входит в объявленные {sorted(declared)}"
+            )
 
 
 # --- H2: регистрационный пакет не расходится с кодом ------------------------

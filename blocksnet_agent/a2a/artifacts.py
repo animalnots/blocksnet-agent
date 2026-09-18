@@ -47,6 +47,10 @@ _EMBEDDABLE: Dict[str, str] = {
     ".txt": "text/plain",
 }
 
+#: Всё, что сервер может отдать частью артефакта или статуса. Карточка объявляет
+#: ровно этот список: CodeSynapse отвергает часть с mediaType вне объявленных.
+OUTPUT_MODES: Tuple[str, ...] = tuple(sorted(set(_EMBEDDABLE.values())))
+
 #: Ключи результата, которые не несут аналитики и только раздувают DataPart.
 _RESULT_NOISE = frozenset({"artifacts", "run_dir"})
 
@@ -213,4 +217,4 @@ def build_artifacts(output: Dict[str, Any]) -> List[Artifact]:
     return artifacts
 
 
-__all__ = ["MAX_EMBEDDED_BYTES", "build_artifacts"]
+__all__ = ["MAX_EMBEDDED_BYTES", "OUTPUT_MODES", "build_artifacts"]
