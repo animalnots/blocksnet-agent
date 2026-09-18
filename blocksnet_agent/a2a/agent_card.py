@@ -25,6 +25,7 @@ from a2a.types import (
 )
 from google.protobuf.struct_pb2 import Struct
 
+from blocksnet_agent.a2a.artifacts import OUTPUT_MODES
 from blocksnet_agent.a2a.extension import build_parameter_extension
 from blocksnet_agent.a2a.skills import SKILLS
 
@@ -101,7 +102,7 @@ def build_agent_card(
             extensions=_build_extensions(),
         ),
         default_input_modes=["text/plain"],
-        default_output_modes=["text/plain", "application/json"],
+        default_output_modes=list(OUTPUT_MODES),
         skills=skills,
     )
 
