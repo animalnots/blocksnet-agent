@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     chat_url: str = Field(validation_alias="CHAT_URL")
     api_key: str = Field(validation_alias="API_KEY")
     model: str = Field(default="gpt-4o-mini", validation_alias="MODEL")
+    reasoning_effort: str | None = Field(default=None, validation_alias="REASONING_EFFORT")
     data_dir: Path = Field(default=PROJECT_ROOT / "data")
     output_dir: Path = Field(default=PROJECT_ROOT / "outputs")
     # P0.3: подняли с 10 до 24 — согласовано с текстом промпта (бюджет ~20 tool calls).

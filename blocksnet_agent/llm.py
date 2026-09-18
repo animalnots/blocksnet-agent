@@ -32,10 +32,14 @@ def get_chat_model(
     """Возвращает LangChain chat-модель. Кэшируется по (model_id, temperature, max_tokens)."""
     settings = get_settings()
     mid = model_id or _active_model or settings.model
+    effort = (settings.reasoning_effort or "").strip() or None
     return ChatOpenAI(
         model=mid,
         temperature=temperature,
         max_tokens=max_tokens,
         api_key=settings.api_key,
         base_url=settings.chat_url,
+        # OpenRouter-style body field. ChatOpenAI's own ``reasoning=`` kwarg would switch the
+        # client to the Responses API instead of Chat Completions.
+        extra_body={"reasoning": {"effort": effort}} if effort else None,
     )
