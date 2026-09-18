@@ -155,7 +155,15 @@ def build_artifacts(output: Dict[str, Any]) -> List[Artifact]:
     перечень файлов, которые встроить не удалось. Дальше — по артефакту на
     встраиваемый файл.
     """
-    paths = [Path(str(p)) for p in (output.get("artifacts") or [])]
+    # ``to_json`` перечисляет файлы относительно ``run_dir`` (формат MCP-ответа);
+    # без привязки они искались бы в cwd сервера и отмечались как «недоступен».
+    run_dir = str(output.get("run_dir") or "")
+    paths: List[Path] = []
+    for raw in output.get("artifacts") or []:
+        path = Path(str(raw))
+        if run_dir and not path.is_absolute():
+            path = Path(run_dir) / path
+        paths.append(path)
 
     embedded: List[Dict[str, Any]] = []
     skipped: List[Dict[str, str]] = []

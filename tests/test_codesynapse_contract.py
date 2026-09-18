@@ -623,6 +623,32 @@ def test_small_text_artifact_is_embedded(tmp_path) -> None:
     assert "Всё хорошо" in embedded[0]["parts"][0]["text"]
 
 
+def test_run_relative_artifact_names_are_resolved_against_run_dir(tmp_path) -> None:
+    """``to_json`` перечисляет файлы относительно ``run_dir`` — именно в таком виде
+    они доходят до build_artifacts. Без привязки к ``run_dir`` сервер искал бы их
+    в своём cwd и честно сообщал бы «недоступен» о каждом CSV прогона."""
+    run_dir = tmp_path / "run_20260918-110916-d2bb48"
+    (run_dir / "maps").mkdir(parents=True)
+    (run_dir / "services_count.csv").write_text("block_id,count\n1,2\n", encoding="utf-8")
+    (run_dir / "maps" / "services_count.png").write_bytes(b"\x89PNG")
+
+    task = _exchange(
+        {
+            "status": "ok",
+            "result": "ok",
+            "run_dir": str(run_dir),
+            "artifacts": ["services_count.csv", "maps/services_count.png"],
+        }
+    )
+
+    by_name = {a["name"]: a for a in task["artifacts"]}
+    assert "services_count.csv" in by_name, list(by_name)
+    assert "block_id,count" in by_name["services_count.csv"]["parts"][0]["text"]
+    data_part = next(part for part in task["artifacts"][0]["parts"] if "data" in part)
+    skipped = data_part["data"]["skipped_artifacts"]
+    assert [item["name"] for item in skipped] == ["services_count.png"]
+
+
 def test_oversized_artifact_is_skipped(tmp_path) -> None:
     from blocksnet_agent.a2a.artifacts import MAX_EMBEDDED_BYTES
 
