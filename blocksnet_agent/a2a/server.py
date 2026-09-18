@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from typing import Any
@@ -51,6 +52,11 @@ from blocksnet_agent.context import ERROR_VALIDATION_ERROR
 from blocksnet_agent.a2a.task_manager import TaskManager, TaskState as A2ATaskState
 
 log = logging.getLogger("blocksnet_agent.a2a")
+
+
+# Нулевой интервал из настроек превратил бы ожидание в execute() в busy-loop
+# статусных событий.
+MIN_HEARTBEAT_SEC = 0.1
 
 
 def _agent_message(text: str) -> Message:
@@ -162,7 +168,7 @@ class _A2ATaskBridge(AgentExecutor):
         skill_id = "run_pipeline"
         spec = get_skill(skill_id) or SKILLS[0]
 
-        # Прогресс колбэк → TaskStatusUpdateEvent.
+        # Статусное событие → TaskStatusUpdateEvent.
         #
         # Два требования профиля 1.0, каждое из которых раньше молча гасило
         # весь поток статусов (конструктор падал, а except ниже это глотал):
@@ -172,7 +178,7 @@ class _A2ATaskBridge(AgentExecutor):
         #     ($defs.taskStatusUpdate закрыта), ни в самом SDK.
         # Мы объявляем ``streaming: true``, так что поток статусов — часть
         # контракта, а не внутренняя деталь.
-        def _on_progress(state: str, message: str) -> None:
+        async def _emit_status(state: str, message: str) -> None:
             try:
                 a2a_state = {
                     "submitted": TaskState.TASK_STATE_SUBMITTED,
@@ -189,7 +195,7 @@ class _A2ATaskBridge(AgentExecutor):
                 )
                 a2a_state = TaskState.TASK_STATE_WORKING
             try:
-                event_queue.enqueue_event(
+                await event_queue.enqueue_event(
                     TaskStatusUpdateEvent(
                         task_id=context.task_id or "",
                         context_id=ctx_id,
@@ -229,10 +235,21 @@ class _A2ATaskBridge(AgentExecutor):
             ),
         )
 
-        # Блокирующее ожидание — наш пул. Не asyncio.wait_for (см. шаг 04).
+        # Ждём future пула через loop, а не через future.result(): блокирующее
+        # ожидание замораживало loop сервера на весь прогон — до клиента не доходил
+        # даже начальный Task, /health переставал отвечать. Между шагами пайплайна
+        # шлём heartbeat ``working`` с последним прогрессом runner'а, иначе read-timeout
+        # стримингового клиента срабатывает на любом прогоне длиннее этого таймаута.
         if record.future is not None:
+            finished = asyncio.wrap_future(record.future)
+            heartbeat_sec = max(self._settings.progress_interval_sec, MIN_HEARTBEAT_SEC)
+            while True:
+                done, _ = await asyncio.wait({finished}, timeout=heartbeat_sec)
+                if done:
+                    break
+                await _emit_status("working", record.last_progress or "working")
             try:
-                record.future.result()
+                finished.result()
             except Exception:
                 log.exception("task failed during execute()")
 
