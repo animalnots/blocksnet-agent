@@ -132,8 +132,6 @@ def test_zero_progress_interval_does_not_flood_the_stream(monkeypatch) -> None:
 
 @pytest.mark.parametrize("pool", [1, 2])
 def test_requests_beyond_the_pool_wait_for_a_slot_and_all_finish(monkeypatch, pool) -> None:
-    """``pool + 1`` requests, the first already running when the rest arrive: all of them
-    finish, and never more than ``pool`` pipelines run at once."""
     import blocksnet_agent.a2a.executor as executor_mod
     import blocksnet_agent.a2a.server as server_mod
     from blocksnet_agent.a2a.settings import A2ASettings

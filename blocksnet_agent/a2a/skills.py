@@ -31,8 +31,8 @@ class SkillSpec:
     tags: tuple[str, ...]
     examples: tuple[str, ...]
     input_model: type
-    # Реализация: ``run(input_dict, output_dir, data_dir, deadline_sec,
-    # progress_cb, stop_event) -> dict``. Описывает логику skill-а.
+    # Сервер вызывает runner только по именам: input_payload, output_dir, data_dir,
+    # deadline_sec, progress_cb, stop_event -> dict со status ("ok"|"partial"|"failed").
     runner: Any  # callable — тип намеренно Any, чтобы не возиться с Callable[...]
 
 
@@ -44,8 +44,7 @@ def _run_run_pipeline(
     progress_cb: Any,
     stop_event: Any,
 ) -> dict[str, Any]:
-    """Реализация skill-а ``run_pipeline``: прогоняет конвейер и возвращает
-    финальный payload (с ``status="ok"|"partial"|"failed"``).
+    """Реализация skill-а ``run_pipeline``.
 
     Считает прямо в потоке задачи TaskManager, которую завёл сервер. Если завести
     здесь вторую задачу в тот же пул и ждать её, запрос держит два потока, и пул
@@ -62,8 +61,8 @@ def _run_run_pipeline(
         deadline_sec=deadline_sec,
         stop_event=stop_event,
         progress_cb=progress_cb,
-        scenario_id=inp.scenario_id,  # a2a/06
-        project_id=inp.project_id,    # a2a/06
+        scenario_id=inp.scenario_id,
+        project_id=inp.project_id,
     )
 
 

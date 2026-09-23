@@ -356,8 +356,6 @@ def test_pipeline_on_a_reused_worker_thread_starts_its_own_run(tmp_path: Path) -
 def test_parallel_pipelines_keep_their_own_stop_flag_and_progress(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Два прогона одновременно: каждый видит только свой стоп-флаг и шлёт прогресс
-    только в свой колбэк, а функции модуля ``runtime`` после них прежние."""
     # Пусть pytest вернёт оригиналы, даже если прогон их подменит и не вернёт.
     monkeypatch.setattr(runtime, "is_stop_requested", runtime.is_stop_requested)
     monkeypatch.setattr(runtime, "report_progress", runtime.report_progress)
