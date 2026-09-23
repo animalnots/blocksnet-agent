@@ -31,73 +31,48 @@ class SkillSpec:
     tags: tuple[str, ...]
     examples: tuple[str, ...]
     input_model: type
-    # Реализация: ``run(input_dict, task_manager, output_dir, data_dir,
-    # deadline_sec, progress_cb) -> dict``. Описывает логику skill-а.
+    # Сервер вызывает runner только по именам: input_payload, output_dir, data_dir,
+    # deadline_sec, progress_cb, stop_event -> dict со status ("ok"|"partial"|"failed").
     runner: Any  # callable — тип намеренно Any, чтобы не возиться с Callable[...]
 
 
 def _run_run_pipeline(
     input_payload: dict[str, Any],
-    task_manager: Any,
     output_dir: Any,
     data_dir: Any,
     deadline_sec: int | None,
     progress_cb: Any,
+    stop_event: Any,
 ) -> dict[str, Any]:
     """Реализация skill-а ``run_pipeline``.
 
-    Создаёт задачу через TaskManager, блокирующе ждёт терминального статуса.
-    Возвращает финальный payload (с ``status="ok"|"partial"|"failed"``).
+    Считает прямо в потоке задачи TaskManager, которую завёл сервер. Если завести
+    здесь вторую задачу в тот же пул и ждать её, запрос держит два потока, и пул
+    встаёт навсегда, как только все его потоки заняты таким ожиданием.
     """
     from blocksnet_agent.a2a.executor import execute_run_pipeline
 
     inp = RunPipelineInput.model_validate(input_payload)
-
-    # Хелпер: runner для TaskManager — вызывается в рабочем потоке.
-    def _task_runner(record: Any, internal_progress_cb: Any) -> dict[str, Any]:
-        # ``internal_progress_cb`` дросселирует (TaskManager), а ``progress_cb``
-        # наружу — без дросселя. Объединяем: внешний тоже получит события.
-        def _combined(state: str, message: str) -> None:
-            internal_progress_cb(state, message)
-            progress_cb(state, message)
-
-        return execute_run_pipeline(
-            question=inp.question,
-            max_iterations=inp.max_iterations,
-            output_dir=output_dir,
-            data_dir=data_dir,
-            deadline_sec=deadline_sec,
-            stop_event=record.stop_event,
-            progress_cb=_combined,
-            scenario_id=inp.scenario_id,  # a2a/06
-            project_id=inp.project_id,    # a2a/06
-        )
-
-    record = task_manager.submit(input_payload, _task_runner)
-    # Блокирующее ожидание терминального статуса. ``future.result()`` отпускает,
-    # когда задача финализирована (state in {completed, failed, canceled}).
-    if record.future is not None:
-        try:
-            record.future.result()
-        except Exception:
-            # Исключение уже залогировано в TaskManager._start.
-            pass
-    # После завершения — обновляем record из стора.
-    record = task_manager.get(record.task_id) or record
-    return record.output or {
-        "status": "failed",
-        "error_code": "NO_OUTPUT",
-        "error": "task finished without output",
-    }
+    return execute_run_pipeline(
+        question=inp.question,
+        max_iterations=inp.max_iterations,
+        output_dir=output_dir,
+        data_dir=data_dir,
+        deadline_sec=deadline_sec,
+        stop_event=stop_event,
+        progress_cb=progress_cb,
+        scenario_id=inp.scenario_id,
+        project_id=inp.project_id,
+    )
 
 
 def _run_analyze_urban_question(
     input_payload: dict[str, Any],
-    task_manager: Any,
     output_dir: Any,
     data_dir: Any,
     deadline_sec: int | None,
     progress_cb: Any,
+    stop_event: Any,
 ) -> dict[str, Any]:
     """Реализация ``analyze_urban_question`` (back-compat).
 
@@ -113,11 +88,11 @@ def _run_analyze_urban_question(
             "scenario_id": inp.scenario_id,
             "project_id": inp.project_id,
         },
-        task_manager,
         output_dir,
         data_dir,
         deadline_sec,
         progress_cb,
+        stop_event,
     )
 
 

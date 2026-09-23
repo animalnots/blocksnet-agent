@@ -227,11 +227,11 @@ class _A2ATaskBridge(AgentExecutor):
             input_payload,
             runner=lambda rec, cb: spec.runner(
                 input_payload=input_payload,
-                task_manager=self._task_manager,
                 output_dir=self._settings.output_dir,
                 data_dir=self._settings.data_dir,
                 deadline_sec=self._settings.deadline_sec,
                 progress_cb=cb,
+                stop_event=rec.stop_event,
             ),
         )
 

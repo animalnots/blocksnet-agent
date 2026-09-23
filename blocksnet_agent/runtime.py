@@ -130,6 +130,7 @@ def start_run(
     deadline_sec: float | None = None,
     *,
     overwrite: bool = False,
+    stop_event: threading.Event | None = None,
 ) -> RunContext:
     """Создаёт каталог нового запуска и делает его активным контекстом.
 
@@ -145,6 +146,9 @@ def start_run(
     a2a/04: НЕ трогаем глобальный ``_stop_event`` — только свой per-run
     ``stop_event`` создаётся чистым. Это лечит «отмена одного рана валит
     соседние»: раньше любой ``request_stop()`` взводил общий флаг.
+
+    ``stop_event`` — стоп-флаг, которым владеет вызывающий (у A2A — флаг самой
+    задачи, ``TaskRecord.stop_event``); без него ран получает новый.
     """
     existing = get_run_context()
     if existing is not None and not overwrite:
@@ -165,6 +169,7 @@ def start_run(
         maps_dir=maps_dir,
         progress_callback=progress_callback,
         deadline_at=deadline_at,
+        stop_event=stop_event if stop_event is not None else threading.Event(),
     )
     _set_current(ctx)
     return ctx
