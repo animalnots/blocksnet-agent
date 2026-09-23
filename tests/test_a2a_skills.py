@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -350,3 +351,64 @@ def test_pipeline_on_a_reused_worker_thread_starts_its_own_run(tmp_path: Path) -
 
     assert second["run_dir"] != first["run_dir"]
     assert deadline_passed_at_start == [False, False]
+
+
+def test_parallel_pipelines_keep_their_own_stop_flag_and_progress(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Два прогона одновременно: каждый видит только свой стоп-флаг и шлёт прогресс
+    только в свой колбэк, а функции модуля ``runtime`` после них прежние."""
+    # Пусть pytest вернёт оригиналы, даже если прогон их подменит и не вернёт.
+    monkeypatch.setattr(runtime, "is_stop_requested", runtime.is_stop_requested)
+    monkeypatch.setattr(runtime, "report_progress", runtime.report_progress)
+    originals = (runtime.is_stop_requested, runtime.report_progress)
+    settings = Settings.model_construct(
+        chat_url="http://test",
+        api_key="test",
+        model="test-model",
+        data_dir=tmp_path,
+        output_dir=tmp_path,
+        max_iterations=5,
+    )
+    both_started = threading.Barrier(2)
+    both_checked = threading.Barrier(2)
+    stop_seen: dict[str, bool] = {}
+
+    class _Agent:
+        def __init__(self, settings: Any, max_iterations: int) -> None:
+            pass
+
+        def run(self, task: str) -> AgentResult:
+            both_started.wait(timeout=5)
+            # Как гейт инструментов: имя берётся из модуля в момент вызова.
+            from blocksnet_agent.runtime import is_stop_requested, report_progress
+
+            stop_seen[task] = is_stop_requested()
+            report_progress(f"этап {task}")
+            both_checked.wait(timeout=5)
+            return AgentResult(output="готово", run_dir=str(runtime.get_run_context().run_dir))
+
+    stops = {"A": threading.Event(), "B": threading.Event()}
+    stops["A"].set()
+    progress: dict[str, list[str]] = {"A": [], "B": []}
+
+    def _run(name: str) -> dict[str, Any]:
+        return execute_run_pipeline(
+            question=name,
+            max_iterations=None,
+            output_dir=tmp_path,
+            data_dir=tmp_path,
+            deadline_sec=None,
+            stop_event=stops[name],
+            progress_cb=lambda state, message: progress[name].append(message),
+            agent_factory=_Agent,
+            agent_settings=settings,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = dict(zip("AB", pool.map(_run, "AB")))
+
+    assert stop_seen == {"A": True, "B": False}
+    assert progress == {"A": ["этап A"], "B": ["этап B"]}
+    assert [results["A"]["status"], results["B"]["status"]] == ["partial", "ok"]
+    assert (runtime.is_stop_requested, runtime.report_progress) == originals

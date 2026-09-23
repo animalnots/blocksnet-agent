@@ -91,10 +91,6 @@ def execute_run_pipeline(
             error_code="VALIDATION_ERROR",
         )
 
-    # Per-run stop_event: прокидываем через ``start_run``-контекст.
-    # Сам stop_event — это threading.Event из TaskRecord. Используем его в
-    # callback ``is_stop_requested_or_external``: после каждого tool-call
-    # ``agent`` проверяет наш stop_event.
     iterations = max_iterations if max_iterations is not None else 24
     # Читаем agent-настройки (LLM/MAX_ITERATIONS из env/.env). Тесты могут
     # передать ``agent_settings`` напрямую (без чтения .env).
@@ -140,50 +136,31 @@ def execute_run_pipeline(
     # Запускаем run-контекст ВНУТРИ рабочего потока — это требование шага 04.
     # overwrite=True: поток пула хранит RunContext прошлой задачи, без него
     # задача унаследует её каталог и уже истёкший дедлайн.
+    # Стоп-флаг задачи и её прогресс — поля этого RunContext, а не подмена функций
+    # модуля runtime: подмена одна на весь процесс, и параллельные прогоны видят чужие.
     deadline_for_run = deadline_sec or None
-    ctx = start_run(output_dir, deadline_sec=deadline_for_run, overwrite=True)
 
-    # Локальный stop-or-external helper: блокирует вызовы инструментов, если
-    # per-run stop_event взведён (cancel от клиента) или дедлайн истёк.
-    def _should_stop() -> bool:
-        if stop_event is not None and stop_event.is_set():
-            return True
-        return is_stop_requested()
+    def _progress(_done: int, _total: int, stage: str) -> None:
+        progress_cb("working", stage or "")
 
-    # Патчим ``is_stop_requested`` через monkeypatch — простейший путь
-    # прокинуть stop_event. Тесты могут подменить ``agent_factory``.
-    import blocksnet_agent.runtime as runtime_module
+    ctx = start_run(
+        output_dir,
+        progress_callback=_progress,
+        deadline_sec=deadline_for_run,
+        overwrite=True,
+        stop_event=stop_event,
+    )
 
-    _original_is_stop = runtime_module.is_stop_requested
-    runtime_module.is_stop_requested = _should_stop  # type: ignore[assignment]
-    try:
-        agent_cls = agent_factory or BlocksNetAgent
-        agent = agent_cls(
-            settings=run_settings,
-            max_iterations=iterations,
-        )
-        # Опционально: передаём progress_cb агенту (через report_progress).
-        # Текущий agent.run использует ``report_progress(stage)`` —
-        # обернём его, чтобы progress_cb дёргался.
-        _original_report = runtime_module.report_progress
-        def _report_with_cb(stage: str = "") -> None:
-            try:
-                progress_cb("working", stage or "")
-            finally:
-                _original_report(stage)
-        runtime_module.report_progress = _report_with_cb  # type: ignore[assignment]
-
-        try:
-            result = agent.run(normalized_question)
-        finally:
-            runtime_module.report_progress = _original_report  # type: ignore[assignment]
-    finally:
-        # Восстанавливаем оригинал, чтобы не «утечь» патч в другие задачи.
-        runtime_module.is_stop_requested = _original_is_stop  # type: ignore[assignment]
+    agent_cls = agent_factory or BlocksNetAgent
+    agent = agent_cls(
+        settings=run_settings,
+        max_iterations=iterations,
+    )
+    result = agent.run(normalized_question)
 
     # ``ctx.run_dir`` — это ``run_<timestamp>-<id>``.
     run_dir = str(getattr(result, "run_dir", "") or ctx.run_dir)
-    status = "partial" if _should_stop() else "ok"
+    status = "partial" if is_stop_requested() else "ok"
 
     return build_payload(
         result,
