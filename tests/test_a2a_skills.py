@@ -93,11 +93,11 @@ def test_run_pipeline_output_has_required_keys(
         {"question": "тест"},
         runner=lambda rec, cb: skills.get_skill("run_pipeline").runner(
             input_payload={"question": "тест"},
-            task_manager=task_manager,
             output_dir=Path("/tmp"),
             data_dir=Path("/tmp"),
             deadline_sec=None,
             progress_cb=lambda s, m: None,
+            stop_event=rec.stop_event,
         ),
     )
     record.future.result(timeout=5.0)
@@ -115,11 +115,11 @@ def test_analyze_urban_question_proxy_to_run_pipeline(
         {"question": "q"},
         runner=lambda rec, cb: skills.get_skill("analyze_urban_question").runner(
             input_payload={"question": "q"},
-            task_manager=task_manager,
             output_dir=Path("/tmp"),
             data_dir=Path("/tmp"),
             deadline_sec=None,
             progress_cb=lambda s, m: None,
+            stop_event=rec.stop_event,
         ),
     )
     record.future.result(timeout=5.0)
@@ -143,11 +143,11 @@ def test_analyze_urban_question_contract_keys_match_mcp(
         {"question": "q"},
         runner=lambda rec, cb: skills.get_skill("run_pipeline").runner(
             input_payload={"question": "q"},
-            task_manager=task_manager,
             output_dir=Path("/tmp"),
             data_dir=Path("/tmp"),
             deadline_sec=None,
             progress_cb=lambda s, m: None,
+            stop_event=rec.stop_event,
         ),
     )
     record.future.result(timeout=5.0)
@@ -168,11 +168,11 @@ def test_empty_question_returns_validation_error(
         {"question": ""},
         runner=lambda rec, cb: skills.get_skill("run_pipeline").runner(
             input_payload={"question": ""},
-            task_manager=task_manager,
             output_dir=Path("/tmp"),
             data_dir=Path("/tmp"),
             deadline_sec=None,
             progress_cb=lambda s, m: None,
+            stop_event=rec.stop_event,
         ),
     )
     record.future.result(timeout=5.0)
@@ -189,11 +189,11 @@ def test_invalid_max_iterations_returns_validation_error(
         {"question": "q", "max_iterations": 0},
         runner=lambda rec, cb: skills.get_skill("run_pipeline").runner(
             input_payload={"question": "q", "max_iterations": 0},
-            task_manager=task_manager,
             output_dir=Path("/tmp"),
             data_dir=Path("/tmp"),
             deadline_sec=None,
             progress_cb=lambda s, m: None,
+            stop_event=rec.stop_event,
         ),
     )
     record.future.result(timeout=5.0)
