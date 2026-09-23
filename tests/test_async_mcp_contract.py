@@ -4,9 +4,16 @@
 """
 from __future__ import annotations
 
+import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any
 
 import pytest
+
+from blocksnet_agent import AgentResult, runtime
+from blocksnet_mcp import agent_tool
+from blocksnet_mcp.settings import MCPSettings
 
 
 def test_analyze_urban_question_validation_returns_structured_response() -> None:
@@ -84,3 +91,38 @@ def test_agent_exception_returns_structured_failed(monkeypatch) -> None:
     assert result["status"] == "failed"
     assert result["error_code"] == "AGENT_EXCEPTION"
     assert "LLM connection refused" in result["error"]
+
+
+def test_agent_tool_on_a_reused_worker_thread_starts_its_own_run(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Оба вызова — на одном потоке, как у ``run_in_executor`` в server.py: RunContext
+    лежит в ContextVar потока и переживает вызов, а дедлайн первого истекает до второго.
+    """
+    deadline_sec = 0.3
+    settings = MCPSettings.model_construct(
+        chat_url="http://test",
+        api_key="test",
+        model="test-model",
+        data_dir=tmp_path,
+        output_dir=tmp_path,
+        max_iterations=1,
+        deadline_sec=deadline_sec,
+    )
+    monkeypatch.setattr(agent_tool, "get_mcp_settings", lambda: settings)
+    deadline_passed_at_start: list[bool] = []
+
+    def _recording_run(self: Any, task: str) -> AgentResult:
+        deadline_passed_at_start.append(runtime.is_deadline_reached())
+        return AgentResult(output="готово", run_dir=str(runtime.get_run_context().run_dir))
+
+    monkeypatch.setattr("blocksnet_agent.BlocksNetAgent.run", _recording_run)
+
+    question = "Где не хватает школ?"
+    with ThreadPoolExecutor(max_workers=1) as worker:
+        first = worker.submit(agent_tool.analyze_urban_question, question).result(timeout=60.0)
+        time.sleep(deadline_sec * 2)
+        second = worker.submit(agent_tool.analyze_urban_question, question).result(timeout=60.0)
+
+    assert second["run_dir"] != first["run_dir"]
+    assert deadline_passed_at_start == [False, False]

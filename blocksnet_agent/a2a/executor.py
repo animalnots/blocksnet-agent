@@ -138,8 +138,10 @@ def execute_run_pipeline(
     run_settings = agent_settings.model_copy(update={"data_dir": data_dir})
 
     # Запускаем run-контекст ВНУТРИ рабочего потока — это требование шага 04.
+    # overwrite=True: поток пула хранит RunContext прошлой задачи, без него
+    # задача унаследует её каталог и уже истёкший дедлайн.
     deadline_for_run = deadline_sec or None
-    ctx = start_run(output_dir, deadline_sec=deadline_for_run)
+    ctx = start_run(output_dir, deadline_sec=deadline_for_run, overwrite=True)
 
     # Локальный stop-or-external helper: блокирует вызовы инструментов, если
     # per-run stop_event взведён (cancel от клиента) или дедлайн истёк.

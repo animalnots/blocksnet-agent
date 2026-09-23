@@ -151,10 +151,13 @@ def analyze_urban_question(
     # P0.2: пробрасываем progress callback и дедлайн в run context.
     from blocksnet_agent.runtime import is_stop_requested
 
+    # overwrite=True: поток пула (server.py → run_in_executor) хранит RunContext
+    # прошлого вызова, без него вызов унаследует его каталог, дедлайн и callback.
     ctx = start_run(
         settings.output_dir,
         progress_callback=progress_callback,
         deadline_sec=settings.deadline_sec or None,
+        overwrite=True,
     )
     output_dir = get_run_dir(settings.output_dir)
     run_id = ctx.run_id

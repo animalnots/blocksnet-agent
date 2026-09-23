@@ -10,13 +10,18 @@
 
 from __future__ import annotations
 
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from blocksnet_agent import AgentResult, runtime
 from blocksnet_agent.a2a import skills
+from blocksnet_agent.a2a.executor import execute_run_pipeline
 from blocksnet_agent.a2a.task_manager import TaskManager
+from blocksnet_agent.config import Settings
 
 
 @pytest.fixture
@@ -300,3 +305,48 @@ def test_execute_run_pipeline_with_mock_agent(
     assert output.get("status") == "ok"
     assert output.get("tool") == "run_pipeline"
     assert output.get("run_id")
+
+
+def test_pipeline_on_a_reused_worker_thread_starts_its_own_run(tmp_path: Path) -> None:
+    """Обе задачи — на одном потоке пула: RunContext лежит в ContextVar потока
+    и переживает задачу, а дедлайн первой успевает истечь до старта второй.
+    """
+    deadline_sec = 0.3
+    settings = Settings.model_construct(
+        chat_url="http://test",
+        api_key="test",
+        model="test-model",
+        data_dir=tmp_path,
+        output_dir=tmp_path,
+        max_iterations=5,
+    )
+    deadline_passed_at_start: list[bool] = []
+
+    class _RecordingAgent:
+        def __init__(self, settings: Any, max_iterations: int) -> None:
+            pass
+
+        def run(self, task: str) -> AgentResult:
+            deadline_passed_at_start.append(runtime.is_deadline_reached())
+            return AgentResult(output="готово", run_dir=str(runtime.get_run_context().run_dir))
+
+    def _run_pipeline() -> dict[str, Any]:
+        return execute_run_pipeline(
+            question="Где не хватает школ?",
+            max_iterations=None,
+            output_dir=tmp_path,
+            data_dir=tmp_path,
+            deadline_sec=deadline_sec,
+            stop_event=None,
+            progress_cb=lambda state, message: None,
+            agent_factory=_RecordingAgent,
+            agent_settings=settings,
+        )
+
+    with ThreadPoolExecutor(max_workers=1) as worker:
+        first = worker.submit(_run_pipeline).result(timeout=60.0)
+        time.sleep(deadline_sec * 2)
+        second = worker.submit(_run_pipeline).result(timeout=60.0)
+
+    assert second["run_dir"] != first["run_dir"]
+    assert deadline_passed_at_start == [False, False]
