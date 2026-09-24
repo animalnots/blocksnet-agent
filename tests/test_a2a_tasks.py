@@ -103,7 +103,7 @@ def test_concurrency_limit_holds(manager: TaskManager) -> None:
 
     # Третья — лимит исчерпан, должна быть в SUBMITTED.
     r3 = manager.submit({"question": "c"}, runner=slow_runner_factory("c"))
-    # Дать шедулеру время на попытку acquire (семафор не отпустит).
+    # Пауза, за которую r3 успела бы стартовать, если бы лимит не держал: оба потока пула заняты.
     time.sleep(0.1)
     initial_state = manager.get(r3.task_id).state
     assert initial_state == TaskState.SUBMITTED, (

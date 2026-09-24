@@ -87,7 +87,7 @@ JSON-RPC SendMessage (Bearer)
 DefaultRequestHandler → AgentExecutor.execute()
   │  DataPart scenario_id → ScenarioContext
   ▼
-TaskManager.submit() → Semaphore(MAX_CONCURRENT)
+TaskManager.submit() → пул ThreadPoolExecutor(max_workers=MAX_CONCURRENT), лишние задачи ждут в SUBMITTED
   │
   ▼ (worker thread)
 execute_run_pipeline()
@@ -132,7 +132,7 @@ MCP-клиент (Claude/Cursor/etc)
   │
   ▼ stdio JSON-RPC
 mcp.call_tool(tool_name, args)  ← blocksnet_mcp/server.py
-  │ session_id → store.get_or_create()
+  │ session_id → "default": store.get_or_create(); иначе store.get(), нет сессии → SESSION_NOT_FOUND
   │ data_dir/output_dir → resolve_context(scenario_id)
   ▼
 _build_catalog_tools через build_catalog()  ← blocksnet_agent/tools/catalog.py

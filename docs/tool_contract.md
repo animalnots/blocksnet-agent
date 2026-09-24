@@ -40,7 +40,7 @@
 через ``asyncio.wait_for`` — поток не убивается, агент сам финализирует.
 
 **Лимит конкурентности:** ``A2A_MAX_CONCURRENT_TASKS`` (default 2). Превышение →
-задача в ``submitted``, ждёт семафора.
+задача в ``submitted``, ждёт свободного потока пула.
 
 ### 7.2. `analyze_urban_question` (DEPRECATED, back-compat)
 
