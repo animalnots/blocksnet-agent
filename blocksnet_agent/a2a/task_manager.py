@@ -2,7 +2,7 @@
 
 Шаг 05 a2a-рефакторинга. Главные требования:
 
-- Лимит конкурентности (``max_concurrent_tasks``) — через семафор. Превышение
+- Лимит конкурентности (``max_concurrent_tasks``) — размер пула потоков. Превышение
   → задача остаётся в ``submitted`` пока не освободится слот.
 - ``start_run()`` вызывается ВНУТРИ рабочего потока (см. шаг 04 — ``ContextVar``
   с ``RunContext`` не долетит через ``loop.run_in_executor``). Иначе дедлайн
@@ -93,8 +93,6 @@ class TaskManager:
         self._progress_interval_sec = progress_interval_sec
         self._tasks: dict[str, TaskRecord] = {}
         self._lock = threading.RLock()
-        # Семафор конкурентности — acquire() блокирует submit, если лимит исчерпан.
-        self._semaphore = threading.Semaphore(max_concurrent)
         # Пул потоков для фактического исполнения.
         self._executor = ThreadPoolExecutor(
             max_workers=max_concurrent,
@@ -124,21 +122,14 @@ class TaskManager:
         with self._lock:
             self._tasks[task_id] = record
 
-        # Запускаем в пуле. ``acquire`` — НЕблокирующий через submit-then-acquire,
-        # чтобы не блокировать ``submit()`` самого по себе. Но реально acquire()
-        # у семафора блокирует — это то, что нужно: если все слоты заняты,
-        # ``submit()`` блокируется пока не освободится.
-        #
-        # ВАЖНО: acquire() выполняем в submit-потоке, чтобы лимит работал на
-        # уровне submit-вызовов (а не на старте задач внутри пула).
-        def _on_acquired() -> None:
+        def _run() -> None:
             try:
                 self._start(record, runner)
             except Exception as exc:  # noqa: BLE001
                 log.exception("task %s crashed in _start", task_id)
                 self._finish(record, TaskState.FAILED, error=str(exc), error_code="TASK_EXCEPTION")
 
-        record.future = self._executor.submit(_acquire_then_run, self._semaphore, _on_acquired)
+        record.future = self._executor.submit(_run)
         return record
 
     def get(self, task_id: str) -> TaskRecord | None:
@@ -184,14 +175,13 @@ class TaskManager:
         record: TaskRecord,
         runner: Callable[[TaskRecord, Callable[[str, str], None]], dict[str, Any]],
     ) -> None:
-        """Запускает задачу в текущем потоке. Должна вызываться после acquire.
+        """Запускает задачу в текущем потоке пула.
 
         Состояние переходит SUBMITTED → WORKING → (COMPLETED|FAILED|CANCELED).
         """
         with self._lock:
             if record.state == TaskState.CANCELED:
                 # Отменили пока ждали слота — не запускаем.
-                self._semaphore.release()
                 return
             record.state = TaskState.WORKING
 
@@ -220,8 +210,6 @@ class TaskManager:
             self._finish(
                 record, TaskState.FAILED, error=str(exc), error_code="TASK_EXCEPTION"
             )
-        finally:
-            self._semaphore.release()
 
     def _finish(
         self,
@@ -263,18 +251,6 @@ class TaskManager:
         ]
         for tid in expired:
             self._tasks.pop(tid, None)
-
-
-def _acquire_then_run(
-    semaphore: threading.Semaphore, on_acquired: Callable[[], None]
-) -> None:
-    """Блокирующее получение слота + запуск задачи.
-
-    Вынесено в顶层-функцию, чтобы ``Future`` мог его сериализовать
-    (не все callable'ы pickle-уable).
-    """
-    with semaphore:
-        on_acquired()
 
 
 __all__ = [

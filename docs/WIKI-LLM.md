@@ -107,7 +107,7 @@
 | `blocksnet_agent/a2a/schemas.py` | Pydantic: `RunPipelineInput`, `AnalyzeUrbanQuestionInput`, `SkillOutput` |
 | `blocksnet_agent/a2a/settings.py` | `A2ASettings(Settings)`: LLM + transport + auth + concurrency |
 | `blocksnet_agent/a2a/skills.py` | `SKILLS` реестр: `run_pipeline` + `analyze_urban_question` (DEPRECATED) |
-| `blocksnet_agent/a2a/task_manager.py` | `TaskManager`: Semaphore, per-run stop_event, TTL cleanup |
+| `blocksnet_agent/a2a/task_manager.py` | `TaskManager`: лимит задач = размер пула потоков, per-run stop_event, TTL cleanup |
 | `blocksnet_agent/a2a/auth.py` | FastAPI middleware для Bearer-токена; fail-fast при `A2A_AUTH_ENABLED=true` без `A2A_MAS_BEARER_TOKEN` |
 | `blocksnet_agent/a2a/__main__.py` | `python -m blocksnet_agent.a2a` |
 

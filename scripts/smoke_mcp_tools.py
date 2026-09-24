@@ -34,7 +34,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from blocksnet_mcp.server import mcp  # noqa: E402
+from blocksnet_mcp.server import get_mcp  # noqa: E402
+
+mcp = get_mcp()
 
 
 def _print_header(title: str) -> None:
@@ -139,6 +141,7 @@ async def main() -> int:
     )
 
     _print_header(f"list_cached_data({sid!r}) vs list_cached_data({other_sid!r})")
+    await _call_tool("open_session", {"session_id": other_sid})
     cache_a = await _call_tool("list_cached_data", {"session_id": sid})
     cache_b = await _call_tool("list_cached_data", {"session_id": other_sid})
     text_a = cache_a.get("text", "").lower()

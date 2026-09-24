@@ -38,7 +38,7 @@ from blocksnet_mcp.envelope import (
     ERROR_CODE_TOOL_EXCEPTION,
     build_envelope,
 )
-from blocksnet_mcp.session import get_session_store
+from blocksnet_mcp.session import DEFAULT_SESSION_ID, get_session_store
 from blocksnet_mcp.settings import get_mcp_settings, reset_mcp_settings
 
 log = logging.getLogger("blocksnet_mcp")
@@ -105,9 +105,30 @@ def _build_tool_wrapper(
         )
 
     async def wrapper(**kwargs: Any) -> dict[str, Any]:
-        session_id = kwargs.pop("session_id", "default")
+        session_id = kwargs.pop("session_id", DEFAULT_SESSION_ID) or DEFAULT_SESSION_ID
         store = get_session_store()
-        session = store.get_or_create(session_id)
+        if session_id == DEFAULT_SESSION_ID:
+            session = store.get_or_create(session_id)
+        else:
+            # Пропавшую сессию не пересоздаём: её scenario_id уже забыт, и прогон молча
+            # продолжил бы по корневому датасету. sweep() — чтобы get() не оживил протухшую.
+            store.sweep()
+            session = store.get(session_id)
+            if session is None:
+                return build_envelope(
+                    tool=spec_name,
+                    session_id=session_id,
+                    text="",
+                    artifacts=[],
+                    error_code=ERROR_CODE_SESSION_NOT_FOUND,
+                    error=(
+                        f"сессии {session_id!r} нет на сервере: её закрыли, вытеснили по "
+                        "лимиту сессий, она истекла от простоя или сервер перезапустился. "
+                        f"Открой её заново через open_session(session_id={session_id!r}) с тем "
+                        "же scenario_id, что и раньше, и повтори загрузку и расчёты: данные "
+                        "старой сессии не сохранились."
+                    ),
+                )
         # a2a/07 fix: создаём tools per-request с state конкретной сессии.
         # Раньше обёртка держала ссылку на ``ref_tool`` с пустым state —
         # все сессии делили один набор tools (регрессия изоляции сессий,
