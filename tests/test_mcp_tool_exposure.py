@@ -358,7 +358,6 @@ def test_session_info_lists_keys_only_not_values() -> None:
 
 
 def test_close_session_releases_state() -> None:
-    """close_session → session_id освобождён, следующий вызов с ним получает SESSION_NOT_FOUND."""
     asyncio.run(_call_tool("open_session", {"session_id": "to-close"}))
     asyncio.run(_call_tool("load_blocks", {"session_id": "to-close"}))
     closed = asyncio.run(_call_tool("close_session", {"session_id": "to-close"}))
