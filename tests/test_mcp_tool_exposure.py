@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import importlib
 import os
+import time
 from pathlib import Path
 
 import pytest
@@ -25,11 +26,12 @@ import pytest
 import blocksnet_mcp.server as server_module
 from blocksnet_mcp.envelope import (
     ERROR_CODE_LLM_NOT_CONFIGURED,
+    ERROR_CODE_SESSION_NOT_FOUND,
     ERROR_CODE_TOOL_EXCEPTION,
     ERROR_CODE_TOOL_FAILED,
     build_envelope,
 )
-from blocksnet_mcp.session import reset_session_store
+from blocksnet_mcp.session import SessionStore, reset_session_store
 from blocksnet_mcp.settings import reset_mcp_settings
 
 
@@ -202,6 +204,8 @@ def test_session_id_default_is_default_string() -> None:
 
 def test_session_isolation_via_call_tool() -> None:
     """list_cached_data в разных сессиях показывает разный кэш."""
+    for sid in ("iso-A", "iso-B"):
+        asyncio.run(_call_tool("open_session", {"session_id": sid}))
     # Сессия A: загружаем blocks.
     result_a = asyncio.run(_call_tool("load_blocks", {"session_id": "iso-A"}))
     result_b = asyncio.run(_call_tool("list_cached_data", {"session_id": "iso-B"}))
@@ -220,6 +224,48 @@ def test_default_session_is_shared_when_no_session_id() -> None:
     r2 = asyncio.run(_call_tool("list_cached_data", {"session_id": "default"}))
     assert r1["session_id"] == "default"
     assert r2["session_id"] == "default"
+
+
+def test_empty_session_id_uses_the_default_session() -> None:
+    result = asyncio.run(_call_tool("list_cached_data", {"session_id": ""}))
+    assert result["session_id"] == "default"
+    assert "error_code" not in result
+
+
+def test_evicted_session_is_refused_instead_of_recreated_on_the_root_dataset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = SessionStore(max_sessions=2)
+    monkeypatch.setattr(server_module, "get_session_store", lambda: store)
+    for sid in ("evicted", "second", "third"):
+        asyncio.run(_call_tool("open_session", {"session_id": sid}))
+
+    result = asyncio.run(_call_tool("list_cached_data", {"session_id": "evicted"}))
+
+    assert result["status"] == "failed"
+    assert result["error_code"] == ERROR_CODE_SESSION_NOT_FOUND
+    assert "open_session" in result["error"]
+    assert store.get("evicted") is None
+
+
+def test_expired_session_is_refused_not_revived(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = SessionStore(ttl_sec=0.01)
+    monkeypatch.setattr(server_module, "get_session_store", lambda: store)
+    asyncio.run(_call_tool("open_session", {"session_id": "idle"}))
+    time.sleep(0.05)
+
+    result = asyncio.run(_call_tool("list_cached_data", {"session_id": "idle"}))
+
+    assert result["error_code"] == ERROR_CODE_SESSION_NOT_FOUND
+    assert store.get("idle") is None
+
+
+def test_session_unknown_to_the_server_is_refused_and_not_created() -> None:
+    result = asyncio.run(_call_tool("load_blocks", {"session_id": "never-opened"}))
+
+    assert result["error_code"] == ERROR_CODE_SESSION_NOT_FOUND
+    info = asyncio.run(_call_tool("session_info", {"session_id": "never-opened"}))
+    assert info["exists"] is False
 
 
 # --- envelope и обработка ошибок ------------------------------------------
@@ -300,9 +346,11 @@ def test_session_info_lists_keys_only_not_values() -> None:
     """session_info отдаёт только имена ключей, не значения (там DataFrame'ы)."""
     import json as _json
 
+    asyncio.run(_call_tool("open_session", {"session_id": "info-test"}))
     # Грузим что-то в default-сессию.
     asyncio.run(_call_tool("load_blocks", {"session_id": "info-test"}))
     info_str = asyncio.run(_call_tool("session_info", {"session_id": "info-test"}))
+    assert "keys" in info_str, info_str
     # Внутри нет содержимого GeoDataFrame'ов (там были бы блоки памяти).
     payload = _json.dumps(info_str, default=str)
     # Если бы ключи сериализовались с содержимым — это были бы мегабайты.
@@ -310,10 +358,13 @@ def test_session_info_lists_keys_only_not_values() -> None:
 
 
 def test_close_session_releases_state() -> None:
-    """close_session → session_id освобождён, list_cached_data показывает пустоту."""
+    """close_session → session_id освобождён, следующий вызов с ним получает SESSION_NOT_FOUND."""
+    asyncio.run(_call_tool("open_session", {"session_id": "to-close"}))
     asyncio.run(_call_tool("load_blocks", {"session_id": "to-close"}))
     closed = asyncio.run(_call_tool("close_session", {"session_id": "to-close"}))
     assert closed["closed"] is True
+    after = asyncio.run(_call_tool("list_cached_data", {"session_id": "to-close"}))
+    assert after["error_code"] == ERROR_CODE_SESSION_NOT_FOUND
 
 
 # --- не-MCP-API (для отладки) ---------------------------------------------

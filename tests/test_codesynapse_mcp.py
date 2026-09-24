@@ -149,6 +149,7 @@ def test_cold_session_reports_instead_of_crashing() -> None:
     """
     results = _mcp_session_calls(
         [
+            ("open_session", {"session_id": "cold-1"}),
             ("list_cached_data", {"session_id": "cold-1"}),
             (
                 "get_analysis_results",
@@ -161,7 +162,7 @@ def test_cold_session_reports_instead_of_crashing() -> None:
         assert not item["is_error"], f"{item['name']} упал вместо структурного ответа"
         assert "Traceback" not in item["text"], item["name"]
 
-    cache, analysis = results
+    _opened, cache, analysis = results
     assert "load_blocks" in cache["text"], (
         "подсказка о следующем шаге пропала — их агент не сможет исправиться сам"
     )
